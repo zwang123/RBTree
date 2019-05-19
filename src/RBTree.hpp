@@ -14,32 +14,26 @@ template <typename T, typename Compare>
 class RBTree<T, Compare, 
       typename std::enable_if<std::is_assignable<T&, T>::value
       && !std::is_reference<T>::value>::type> {
+
   using Node = RBTreeNode<T>;
   using pNode = std::shared_ptr<Node>;
-  using cNode = std::shared_ptr<const RBTreeNode<T>>;
+  using cNode = std::shared_ptr<const Node>;
+
 public:
+
   using value_type = T;
   using reference = value_type&;
   using const_reference = const value_type&;
-  //using iterator = RBTreeIterator<T>;
   using iterator = RBTreeIterator<const T>;
   using const_iterator = RBTreeIterator<const T>;
   using difference_type = typename iterator::difference_type;
   using size_type = std::size_t;
-  //using key_compare = Compare;
   
-  //RBTree() = default;
   RBTree() {}
-  //RBTree(const RBTree &other) 
-  //  : _root(other._root?
-  //      std::make_shared<RBTreeNode<T>>(other._root->value()):nullptr) {
-  //  // TODO;
-  //}
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
     traverse_build();
   }
-
   RBTree(RBTree &&other) noexcept {this->swap(other);}
   RBTree &operator=(const RBTree &other) {
     RBTree cpy(other);
@@ -50,7 +44,6 @@ public:
     this->swap(other); return *this;}
   ~RBTree() noexcept {}
   
-
   iterator root() noexcept {return _root;}
   const_iterator root() const noexcept {return _root;}
 
