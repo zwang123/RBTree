@@ -1,0 +1,6 @@
+#ifndef __RBTREE_NODE_DECLARE_HPP_INCLUDED
+#define __RBTREE_NODE_DECLARE_HPP_INCLUDED
+
+template <typename T>
+class RBTreeNode;
+#endif // __RBTREE_NODE_DECLARE_HPP_INCLUDED

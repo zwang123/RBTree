@@ -3,7 +3,10 @@
 
 #include <cstddef>
 #include <type_traits>
+template <typename, typename>
+class RBTreeIterator;
 #include <RBTreeNode.hpp>
+#include <RBTreeNodePointer.hpp>
 #include <RBTreeDeclare.hpp>
 
 template <typename T, typename Enable = void>
@@ -26,20 +29,23 @@ public:
   friend bool operator==<T>(RBTreeIterator<T>, RBTreeIterator<T>);
 
 private:
-  using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
+  //using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
+  using wNode = RBTreeNodePointer<T>;
   using sNode = std::shared_ptr<const RBTreeNode<value_type>>;
   template <typename Y>
   RBTreeIterator(const std::shared_ptr<Y> &ptr) noexcept : _ptr(ptr) {}
+  template <typename Y>
+  RBTreeIterator(const RBTreeNodePointer<Y> &ptr) noexcept : _ptr(ptr) {}
 
   sNode lock() const noexcept {return _ptr.lock();}
 
 public:
   constexpr RBTreeIterator() noexcept {}
-  reference operator*() const noexcept {return _ptr.lock()->value();}
-  pointer operator->() const noexcept {return &_ptr.lock()->value();}
+  reference operator*() const noexcept {return lock()->value();}
+  pointer operator->() const noexcept {return &lock()->value();}
 
-  RBTreeIterator &operator++() {_ptr = _ptr.lock()->next(); return *this;}
-  RBTreeIterator &operator--() {_ptr = _ptr.lock()->prev(); return *this;}
+  RBTreeIterator &operator++() {_ptr = lock()->next(); return *this;}
+  RBTreeIterator &operator--() {_ptr = lock()->prev(); return *this;}
   RBTreeIterator operator++(int) {
     RBTreeIterator other(*this); ++*this; return other;}
   RBTreeIterator operator--(int) {
@@ -53,14 +59,14 @@ private:
   wNode _ptr;
 };
 
-template <typename T>
-bool operator==(RBTreeIterator<T> lhs, RBTreeIterator<T> rhs) noexcept
+template <typename T, typename U>
+bool operator==(RBTreeIterator<T> lhs, RBTreeIterator<U> rhs) noexcept
 {
   return lhs.lock() == rhs.lock();
 }
 
-template <typename T>
-bool operator!=(RBTreeIterator<T> lhs, RBTreeIterator<T> rhs) noexcept
+template <typename T, typename U>
+bool operator!=(RBTreeIterator<T> lhs, RBTreeIterator<U> rhs) noexcept
 {
   return !(lhs == rhs);
 }

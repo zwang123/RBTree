@@ -5,7 +5,10 @@
 #include <memory>
 #include <utility>
 #include <type_traits>
+template <typename, typename, typename>
+class RBTree;
 #include <RBTreeNode.hpp>
+#include <RBTreeNodePointer.hpp>
 #include <RBTreeIterator.hpp>
 
 #ifndef NDEBUG
@@ -23,7 +26,8 @@ class RBTree<T, Compare,
   using Node = RBTreeNode<T>;
   using pNode = std::shared_ptr<Node>;
   using cNode = std::shared_ptr<const Node>;
-
+  using wNode = RBTreeNodePointer<T>;
+  //using wNode = pNode;
 public:
 
   using value_type = T;
@@ -64,8 +68,7 @@ public:
   // dummy function, TODO
   std::pair<iterator, bool> insert(const_reference value) {
     if (empty()) {
-      _root = _begin = std::make_shared<Node>(value);
-      //std::cout << value << std::endl;
+      _begin = _root = std::make_shared<Node>(value);
     } else {
       _begin->left() = std::make_shared<Node>(value);
       _begin->left()->parent() = _begin;
@@ -87,7 +90,7 @@ public:
 
 private:
   pNode _root; // store above root instead of root?
-  pNode _begin; // TODO should be weak_ptr
+  wNode _begin; // TODO should be weak_ptr
   size_type _size;
 
 

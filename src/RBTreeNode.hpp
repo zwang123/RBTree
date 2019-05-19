@@ -3,11 +3,18 @@
 
 #include <memory>
 #include <utility>
+template <typename>
+class RBTreeNode;
+#include <RBTreeNodePointer.hpp>
 
 template <typename T>
 class RBTreeNode {
   using pNode = std::shared_ptr<RBTreeNode<T>>;
   using cNode = std::shared_ptr<const RBTreeNode<T>>;
+  using wNode = RBTreeNodePointer<T>;
+  //using wNode = pNode;
+  using cwNode = RBTreeNodePointer<const T>;
+  //using cwNode = cNode;
   enum color_t {RED, BLACK};
 
 public:
@@ -31,19 +38,20 @@ public:
   cNode left() const noexcept {return _left;}
   pNode &right() noexcept {return _right;}
   cNode right() const noexcept {return _right;}
-  pNode &parent() noexcept {return _parent;}
-  cNode parent() const noexcept {return _parent;}
 
-  pNode &prev() noexcept {return _prev;}
-  cNode prev() const noexcept {return _prev;}
-  pNode &next() noexcept {return _next;}
-  cNode next() const noexcept {return _next;}
+  wNode &parent() noexcept {return _parent;}
+  cwNode parent() const noexcept {return _parent;}
+
+  wNode &prev() noexcept {return _prev;}
+  cwNode prev() const noexcept {return _prev;}
+  wNode &next() noexcept {return _next;}
+  cwNode next() const noexcept {return _next;}
 
   color_t &color() noexcept {return _color;}
   color_t color() const noexcept {return _color;}
 
   //bool is_leaf() const noexcept {return !(_left || _right);}
-  bool is_root() const noexcept {return !parent;}
+  bool is_root() const noexcept {return _parent().lock() == wNode();}
 
   void swap_value(RBTreeNode &other) noexcept {
     using std::swap;
@@ -56,9 +64,9 @@ private:
   pNode _left;
   pNode _right;
 
-  pNode _parent;
-  pNode _prev;
-  pNode _next;
+  wNode _parent;
+  wNode _prev;
+  wNode _next;
 
   color_t _color;
 };
