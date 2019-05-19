@@ -8,6 +8,8 @@
 
 template <typename T, typename Enable = void>
 class RBTreeIterator;
+template <typename T>
+bool operator==(RBTreeIterator<T>, RBTreeIterator<T>) noexcept;
 
 template <typename T>
 class RBTreeIterator<T,
@@ -21,19 +23,23 @@ public:
 
   template <typename T1, typename T2, typename T3>
   friend class RBTree;
+  friend bool operator==<T>(RBTreeIterator<T>, RBTreeIterator<T>);
 
 private:
   using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
+  using sNode = std::shared_ptr<const RBTreeNode<value_type>>;
   template <typename Y>
   RBTreeIterator(const std::shared_ptr<Y> &ptr) noexcept : _ptr(ptr) {}
 
-public:
-  RBTreeIterator() noexcept {}
-  reference operator*() const noexcept {return _ptr->value();}
-  pointer operator->() const noexcept {return &_ptr->value();}
+  sNode lock() const noexcept {return _ptr.lock();}
 
-  RBTreeIterator &operator++() {_ptr = _ptr->next(); return *this;}
-  RBTreeIterator &operator--() {_ptr = _ptr->prev(); return *this;}
+public:
+  constexpr RBTreeIterator() noexcept {}
+  reference operator*() const noexcept {return _ptr.lock()->value();}
+  pointer operator->() const noexcept {return &_ptr.lock()->value();}
+
+  RBTreeIterator &operator++() {_ptr = _ptr.lock()->next(); return *this;}
+  RBTreeIterator &operator--() {_ptr = _ptr.lock()->prev(); return *this;}
   RBTreeIterator operator++(int) {
     RBTreeIterator other(*this); ++*this; return other;}
   RBTreeIterator operator--(int) {
@@ -50,7 +56,7 @@ private:
 template <typename T>
 bool operator==(RBTreeIterator<T> lhs, RBTreeIterator<T> rhs) noexcept
 {
-  return lhs._ptr == rhs._ptr;
+  return lhs.lock() == rhs.lock();
 }
 
 template <typename T>

@@ -3,9 +3,14 @@
 
 #include <cstddef>
 #include <memory>
+#include <utility>
 #include <type_traits>
 #include <RBTreeNode.hpp>
 #include <RBTreeIterator.hpp>
+
+#ifndef NDEBUG
+#include <iostream>
+#endif
 
 template <typename T, typename Compare = std::less<T>, typename Enable = void>
 class RBTree;
@@ -50,11 +55,28 @@ public:
   iterator begin() noexcept {return _begin;}
   const_iterator cbegin() const noexcept {return _begin;}
   // end is always nullptr
-  iterator end() noexcept {return nullptr;}
-  const_iterator cend() const noexcept {return nullptr;}
+  constexpr iterator end() noexcept {return iterator();}
+  constexpr const_iterator cend() const noexcept {return const_iterator();}
 
   size_type size() const noexcept {return _size;}
   bool empty() const noexcept {return cbegin() == cend();}
+
+  // dummy function, TODO
+  std::pair<iterator, bool> insert(const_reference value) {
+    if (empty()) {
+      _root = _begin = std::make_shared<Node>(value);
+      //std::cout << value << std::endl;
+    } else {
+      _begin->left() = std::make_shared<Node>(value);
+      _begin->left()->parent() = _begin;
+      _begin->prev() = _begin->left();
+      _begin->left()->next() = _begin;
+      _begin = _begin->left();
+    }
+    ++_size;
+
+    return {begin(), true};
+  }
 
   void swap(RBTree &other) noexcept {
     using std::swap;
@@ -64,8 +86,8 @@ public:
   }
 
 private:
-  pNode _root;
-  pNode _begin;
+  pNode _root; // store above root instead of root?
+  pNode _begin; // TODO should be weak_ptr
   size_type _size;
 
 

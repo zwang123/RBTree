@@ -1,8 +1,12 @@
+#include <iostream>
 #include <RBTree.hpp>
 
 struct Foo {};
 struct Base {};
 struct Derived : Base {};
+
+using std::cout;
+using std::endl;
 
 void testInitializer()
 {
@@ -34,7 +38,18 @@ void testGet()
 void testIterator()
 {
   RBTree<int> rbti;
-  rbti.begin();
+  for (int i = 0; i < 5; ++i) {
+    rbti.insert(i);
+  }
+  for (auto it = rbti.begin(); it != rbti.end(); ++it) {
+    cout << *it << ' ';
+  }
+  cout << endl;
+  const RBTree<int> rbti2 (rbti);
+  for (auto it = rbti2.cbegin(); it != rbti2.cend(); ++it) {
+    cout << *it << ' ';
+  }
+  cout << endl;
 }
 
 
