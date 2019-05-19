@@ -23,7 +23,7 @@ public:
   friend class RBTree;
 
 private:
-  using cNode = std::shared_ptr<const RBTreeNode<value_type>>;
+  using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
   template <typename Y>
   RBTreeIterator(const std::shared_ptr<Y> &ptr) noexcept : _ptr(ptr) {}
 
@@ -44,7 +44,7 @@ public:
     swap(_ptr, other._ptr);
   }
 private:
-  cNode _ptr;
+  wNode _ptr;
 };
 
 template <typename T>
