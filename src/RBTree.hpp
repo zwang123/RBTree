@@ -49,33 +49,32 @@ public:
 
   iterator begin() noexcept {return _begin;}
   const_iterator cbegin() const noexcept {return _begin;}
-  iterator end() noexcept {return _end;}
-  const_iterator cend() const noexcept {return _end;}
+  // end is always nullptr
+  iterator end() noexcept {return nullptr;}
+  const_iterator cend() const noexcept {return nullptr;}
 
   size_type size() const noexcept {return _size;}
-  bool empty() const noexcept {return _begin == _end;}
+  bool empty() const noexcept {return cbegin() == cend();}
 
   void swap(RBTree &other) noexcept {
     using std::swap;
     swap(_root, other._root);
     swap(_begin, other._begin);
-    swap(_end, other._end);
     swap(_size, other._size);
   }
 
 private:
   pNode _root;
-  iterator _begin;
-  iterator _end;
+  pNode _begin;
   size_type _size;
 
 
-  // build prev and next pointers, and size
+  // build prev and next pointers, and size and begin
   void build_prev_next(pNode curr) {
     if (curr == nullptr) return;
 
     ++_size;
-    //if (begin() ==
+    if (_begin == curr->parent()) _begin = curr;
 
     // assume all prev and next starts at nullptr
     if (curr->right()) {
