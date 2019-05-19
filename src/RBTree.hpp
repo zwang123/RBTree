@@ -32,7 +32,7 @@ public:
   RBTree() {}
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
-    traverse_build();
+    build_prev_next(_root);
   }
   RBTree(RBTree &&other) noexcept {this->swap(other);}
   RBTree &operator=(const RBTree &other) {
@@ -70,8 +70,29 @@ private:
   size_type _size;
 
 
-  // TODO build prev and next pointers
-  void traverse_build();
+  // build prev and next pointers, and size
+  void build_prev_next(pNode curr) {
+    if (curr == nullptr) return;
+
+    ++_size;
+    //if (begin() ==
+
+    // assume all prev and next starts at nullptr
+    if (curr->right()) {
+      if (curr->next()) curr->next()->prev() = curr->right();
+      curr->right()->next() = curr->next();
+      curr->right()->prev() = curr;
+      curr->next() = curr->right();
+    }
+    if (curr->left()) {
+      if (curr->prev()) curr->prev()->next() = curr->left();
+      curr->left()->prev() = curr->prev();
+      curr->left()->next() = curr;
+      curr->prev() = curr->left();
+    }
+    build_prev_next(curr->left());
+    build_prev_next(curr->right());
+  }
 
   static pNode copy_node(cNode src) {
     if (src == nullptr) return nullptr;

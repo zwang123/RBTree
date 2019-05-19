@@ -20,7 +20,7 @@ void testGet()
 {
   RBTree<int> rbti;
   rbti.root();
-  const RBTree<int> crbti;// = rbti;
+  const RBTree<int> crbti = rbti;
   crbti.root();
 
   RBTreeNode<int> rbtni;

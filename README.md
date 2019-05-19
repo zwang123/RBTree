@@ -4,7 +4,8 @@ This is an experimental implementation of [red-black tree](https://en.wikipedia.
 
 ## TODO List
 
-* Build prev and next pointers
+* Build begin and end
+* Change Iterator to `std::weak_ptr`
 * Node insertion
 * Node deletion
 * Node search
