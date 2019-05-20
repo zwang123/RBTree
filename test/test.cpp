@@ -1,7 +1,9 @@
-#include <cstddef>
-#include <random>
 #include <cassert>
+#include <chrono>
+#include <cmath>
+#include <cstddef>
 #include <iostream>
+#include <random>
 #include <set>
 #include <utility>
 #include <RBTree.hpp>
@@ -13,6 +15,7 @@ struct Derived : Base {};
 using std::cout;
 using std::set;
 using std::endl;
+//using std::chrono;
 
 void testInitializer()
 {
@@ -231,6 +234,33 @@ void testRandomInsertion(std::size_t num)
 
 }
 
+template <typename T>
+std::size_t benchmark(std::size_t num) {
+  T rbti;
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<typename T::value_type> dist(0, num);
+  auto beg = std::chrono::high_resolution_clock::now();
+  for (std::size_t i = 0; i != num; ++i) {
+    rbti.insert(dist(mt));
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  return std::chrono::duration_cast<std::chrono::microseconds>
+    (end-beg).count();
+}
+
+void benchmark() {
+  for (std::size_t num = 1000; num < 50000; num *= 2) {
+    double result = benchmark<RBTree<int>>(num);
+    cout << num << " " 
+         << result << " "
+         << result / static_cast<double>(num) << " "
+         << result / static_cast<double>(num) / log2(num) << " "
+         << result / static_cast<double>(num) / num << " "
+         << endl;
+  }
+}
+
 
 int main(int, char **)
 {
@@ -239,5 +269,6 @@ int main(int, char **)
   //testInsertion();
   testIterator();
   testRandomInsertion(1000);
+  benchmark();
   return 0;
 }
