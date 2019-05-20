@@ -107,24 +107,7 @@ public:
     _size = 0;
   }
 
-  //// dummy function, TODO
-  //std::pair<iterator, bool> insert(const_reference value) {
-  //  if (empty()) {
-  //    _begin = _root = std::make_shared<Node>(value);
-  //    _root->next() = _end = std::make_shared<Node>();
-  //    _end->prev() = _root;
-  //  } else {
-  //    _begin->left() = std::make_shared<Node>(value);
-  //    _begin->left()->parent() = _begin;
-  //    _begin->prev() = _begin->left();
-  //    _begin->left()->next() = _begin;
-  //    _begin = _begin->left();
-  //  }
-  //  ++_size;
-  //  return {begin(), true};
-  //}
   std::pair<iterator, bool> insert(const_reference value) {
-    //std::cout << "inserting " << value << std::endl;
     pNode parent;
     auto find_result = find(_root, value, parent);
     if (find_result.second) return {find_result.first, false};
@@ -135,7 +118,6 @@ public:
       _root->next() = _end = std::make_shared<Node>();
       _end->prev() = _root;
     } else {
-      //std::cout << parent->value() << std::endl;
       if (parent->left() == inserted) {
         if (parent->prev()) parent->prev()->next() = inserted;
         else _begin = inserted;
@@ -175,9 +157,10 @@ public:
   //}
 
 #ifndef NDEBUG
+///////////////////////////////////////////////////////////////////////////////
+// DEBUG
   std::string serialize() const {
     static constexpr size_type SPACE = 4;
-
     std::queue<std::pair<size_type, cNode>> nq;
     size_type curr = 0;
     size_type next_enter = 1;
@@ -188,7 +171,6 @@ public:
       cNode p;
       std::tie(i, p) = nq.front();
       nq.pop();
-      //std::cout << i << p << std::endl;
       if (i >= next_enter) {
         curr = next_enter;
         result += "\n";
@@ -209,18 +191,9 @@ public:
       } else
           result += "nul,";
     }
-
     result.pop_back();
     result += "]";
     return result;
-  }
-
-  static bool check_parent(cNode n) {
-    if (!n) return true;
-    return (!n->left() || n->left()->parent() == n)
-        && (!n->right() || n->right()->parent() == n)
-        && check_parent(n->left())
-        && check_parent(n->right());
   }
 
   bool check_parent() const {
@@ -228,30 +201,8 @@ public:
   }
 
   bool is_valid_rb_tree() const {
-    //if (_root && _root->is_red()) return false;
-    //if (is_red(_root)) return false;
-    //if (!check_reds_children(_root)) return false;
     return is_black(_root) && check_reds_children(_root)
       && check_black_height(_root).second;
-  }
-
-  bool check_reds_children(cNode n) const {
-    if (!n) return true;
-    if (n->is_red() && 
-        ((n->left() && n->left()->is_red()) ||
-         (n->right() && n->right()->is_red())))
-      return false;
-    return check_reds_children(n->left()) && 
-           check_reds_children(n->right());
-  }
-  
-  std::pair<size_type, bool> check_black_height(cNode n) const {
-    if (!n) return {1, true};
-    auto lh = check_black_height(n->left());
-    if (!lh.second) return {0, false};
-    auto rh = check_black_height(n->right());
-    if (!rh.second || lh.first != rh.first) return {0, false};
-    return {n->is_black() + lh.first, true};
   }
 
   template <typename Y>
@@ -262,7 +213,6 @@ public:
   static bool is_black(Y n) {
     return !is_red(n);
   }
-
 
   //int is_valid() const {
   //  size_type ctr = 0;
@@ -284,6 +234,8 @@ private:
   pNode _end;
   size_type _size = 0;
 
+///////////////////////////////////////////////////////////////////////////////
+// copy ctor
   static pNode copy_node(cNode src) {
     if (src == nullptr) return nullptr;
     pNode dest = std::make_shared<Node>(src->value());
@@ -334,6 +286,8 @@ private:
     build_end(curr->right());
   }
 
+///////////////////////////////////////////////////////////////////////////////
+// insertion/removal
   static void rotate_left(pNode &ptr2this) {
     pNode curr = ptr2this;
     // assert(curr);
@@ -394,44 +348,35 @@ private:
     else if (curr->parent()->is_red()) {
       auto uncle = curr->uncle();
       auto grandparent = curr->grandparent();
-        //std::cout << __LINE__ << std::endl;
       if (uncle && uncle->is_red()) {
-        //std::cout << __LINE__ << std::endl;
         curr->parent()->set_black();
         uncle->set_black();
         grandparent->set_red();
-        //std::cout << __LINE__ << std::endl;
         insert_repair_tree(grandparent);
       } else {
-        //std::cout << __LINE__ << std::endl;
         if (curr == curr->parent()->right() && 
             curr->parent() == grandparent->left()) {
-        //std::cout << __LINE__ << std::endl;
           rotate_left(grandparent->left());
           curr = curr->left();
         } else if (curr == curr->parent()->left() && 
             curr->parent() == grandparent->right()) {
-        //std::cout << __LINE__ << std::endl;
           rotate_right(grandparent->right());
           curr = curr->right();
         }
-        //std::cout << __LINE__ << std::endl;
-        //std::cout << curr->value() << std::endl;
         wNode parent = curr->parent();
-        //std::cout << parent->value() << std::endl;
         wNode grandparent = parent->parent();
-        //std::cout << grandparent->value() << std::endl;
         if (grandparent->left() == parent)
           rotate_right(grandparent);
         else
           rotate_left(grandparent);
-        //std::cout << __LINE__ << std::endl;
         parent->set_black();
         grandparent->set_red();
       }
     }
   }
 
+///////////////////////////////////////////////////////////////////////////////
+// lookup
   std::pair<pNode&, bool> find(pNode &curr, const_reference value) {
     pNode parent;
     return find(curr, value, parent);
@@ -445,22 +390,45 @@ private:
   std::pair<pNode&, bool> find(pNode &curr, const_reference value, 
       pNode &parent) {
     if (!curr) return {curr, false};
-    //std::cout << curr->value() << std::endl;
     if (Compare()(curr->value(), value)) {
-      //std::cout << __LINE__ << std::endl;
       parent = curr; 
       return find(curr->right(), value, parent);
     }
     if (Compare()(value, curr->value())) {
-      //std::cout << __LINE__ << std::endl;
       parent = curr;
       return find(curr->left(), value, parent);
     }
     return {curr, true};
   }
 
+///////////////////////////////////////////////////////////////////////////////
+// DEBUG
+  static bool check_parent(cNode n) {
+    if (!n) return true;
+    return (!n->left() || n->left()->parent() == n)
+        && (!n->right() || n->right()->parent() == n)
+        && check_parent(n->left())
+        && check_parent(n->right());
+  }
 
-
+  static bool check_reds_children(cNode n) {
+    if (!n) return true;
+    if (n->is_red() && 
+        ((n->left() && n->left()->is_red()) ||
+         (n->right() && n->right()->is_red())))
+      return false;
+    return check_reds_children(n->left()) && 
+           check_reds_children(n->right());
+  }
+  
+  static std::pair<size_type, bool> check_black_height(cNode n) {
+    if (!n) return {1, true};
+    auto lh = check_black_height(n->left());
+    if (!lh.second) return {0, false};
+    auto rh = check_black_height(n->right());
+    if (!rh.second || lh.first != rh.first) return {0, false};
+    return {n->is_black() + lh.first, true};
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

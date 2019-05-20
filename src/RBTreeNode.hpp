@@ -17,10 +17,14 @@ public std::enable_shared_from_this<RBTreeNode<T>> {
   enum color_t {RED, BLACK};
 
 public:
+///////////////////////////////////////////////////////////////////////////////
+// member types
   using value_type = T;
   using reference = value_type&;
   using const_reference = const value_type&;
 
+///////////////////////////////////////////////////////////////////////////////
+// ctor/dtor
   RBTreeNode() {}
   RBTreeNode(const value_type &value) : _value(value) {}
   template <typename std::enable_if<
@@ -29,9 +33,30 @@ public:
   RBTreeNode(const RBTreeNode &other) = delete;
   ~RBTreeNode() noexcept {}
 
+///////////////////////////////////////////////////////////////////////////////
+// query/modifier
   reference value() noexcept {return _value;}
   const_reference value() const noexcept {return _value;}
 
+  void swap_value(RBTreeNode &other) noexcept {
+    using std::swap;
+    swap(_value, other._value);
+  }
+
+  color_t &color() noexcept {return _color;}
+  color_t color() const noexcept {return _color;}
+
+  void set_red() noexcept {_color = RED;}
+  void set_black() noexcept {_color = BLACK;}
+  bool is_red() const noexcept {return _color == RED;}
+  bool is_black() const noexcept {return _color == BLACK;}
+
+  bool is_leaf() const noexcept {return !(_left || _right);}
+  bool is_root() const noexcept {return !_parent;}
+  bool is_end() const noexcept {return !_next;}
+
+///////////////////////////////////////////////////////////////////////////////
+// node operations
   pNode &left() noexcept {return _left;}
   cNode left() const noexcept {return _left;}
   pNode &right() noexcept {return _right;}
@@ -62,23 +87,6 @@ public:
   wNode &next() noexcept {return _next;}
   cwNode next() const noexcept {return _next;}
 
-  color_t &color() noexcept {return _color;}
-  color_t color() const noexcept {return _color;}
-
-  void set_red() noexcept {_color = RED;}
-  void set_black() noexcept {_color = BLACK;}
-  bool is_red() const noexcept {return _color == RED;}
-  bool is_black() const noexcept {return _color == BLACK;}
-
-  bool is_leaf() const noexcept {return !(_left || _right);}
-  bool is_root() const noexcept {return !_parent;}
-  bool is_end() const noexcept {return !_next;}
-
-  void swap_value(RBTreeNode &other) noexcept {
-    using std::swap;
-    swap(_value, other._value);
-  }
-
 private:
   value_type _value;
 
@@ -89,7 +97,7 @@ private:
   wNode _prev;
   wNode _next;
 
-  color_t _color = RED; // DEFAULT? TODO
+  color_t _color = RED;
 };
 
 // non swappable
