@@ -5,34 +5,36 @@
 #include <type_traits>
 template <typename, typename>
 class RBTreeIterator;
+#include <RBTreeDeclare.hpp>
 #include <RBTreeNode.hpp>
 #include <RBTreeNodePointer.hpp>
-#include <RBTreeDeclare.hpp>
 
 template <typename T, typename Enable = void>
 class RBTreeIterator;
-//template <typename T>
-//bool operator==(RBTreeIterator<T>, RBTreeIterator<T>) noexcept;
 
 template <typename T>
 class RBTreeIterator<T,
       typename std::enable_if<std::is_const<T>::value>::type> {
 public:
+///////////////////////////////////////////////////////////////////////////////
+// iterator traits
   using iterator_category = std::bidirectional_iterator_tag;
   using value_type = typename std::remove_const<T>::type;
   using difference_type = std::ptrdiff_t;
   using pointer = T*;
   using reference = T&;
 
+///////////////////////////////////////////////////////////////////////////////
+// friends
   template <typename T1, typename T2, typename T3>
   friend class RBTree;
   template <typename T1, typename T2>
   friend bool operator==(RBTreeIterator<T1>, RBTreeIterator<T2>) noexcept;
 
 private:
-  //using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
   using wNode = RBTreeNodePointer<T>;
   using sNode = std::shared_ptr<const RBTreeNode<value_type>>;
+
   template <typename Y>
   RBTreeIterator(const std::shared_ptr<Y> &ptr) noexcept : _ptr(ptr) {}
   template <typename Y>
@@ -42,6 +44,7 @@ private:
 
 public:
   constexpr RBTreeIterator() noexcept {}
+
   reference operator*() const noexcept {return lock()->value();}
   pointer operator->() const noexcept {return &lock()->value();}
 
@@ -56,6 +59,7 @@ public:
     using std::swap;
     swap(_ptr, other._ptr);
   }
+
 private:
   wNode _ptr;
 };

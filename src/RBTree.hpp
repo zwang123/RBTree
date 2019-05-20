@@ -3,13 +3,13 @@
 
 #include <cstddef>
 #include <memory>
-#include <utility>
 #include <type_traits>
+#include <utility>
 template <typename, typename, typename>
 class RBTree;
+#include <RBTreeIterator.hpp>
 #include <RBTreeNode.hpp>
 #include <RBTreeNodePointer.hpp>
-#include <RBTreeIterator.hpp>
 
 #ifndef NDEBUG
 #include <iostream>
@@ -27,9 +27,11 @@ class RBTree<T, Compare,
   using pNode = std::shared_ptr<Node>;
   using cNode = std::shared_ptr<const Node>;
   using wNode = RBTreeNodePointer<T>;
-  //using wNode = pNode;
+
 public:
 
+///////////////////////////////////////////////////////////////////////////////
+// member types
   using value_type = T;
   using reference = value_type&;
   using const_reference = const value_type&;
@@ -38,12 +40,21 @@ public:
   using difference_type = typename iterator::difference_type;
   using size_type = std::size_t;
   
+///////////////////////////////////////////////////////////////////////////////
+// ctor
   RBTree() {}
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
     build_prev_next(_root);
   }
   RBTree(RBTree &&other) noexcept {this->swap(other);}
+
+///////////////////////////////////////////////////////////////////////////////
+// dtor
+  ~RBTree() noexcept {}
+
+///////////////////////////////////////////////////////////////////////////////
+// operator=
   RBTree &operator=(const RBTree &other) {
     RBTree cpy(other);
     this->swap(cpy);
@@ -51,8 +62,9 @@ public:
   }
   RBTree &operator=(RBTree &&other) noexcept {
     this->swap(other); return *this;}
-  ~RBTree() noexcept {}
   
+///////////////////////////////////////////////////////////////////////////////
+// iterators
   iterator root() noexcept {return _root;}
   const_iterator root() const noexcept {return _root;}
 
@@ -62,9 +74,14 @@ public:
   constexpr iterator end() noexcept {return iterator();}
   constexpr const_iterator cend() const noexcept {return const_iterator();}
 
-  size_type size() const noexcept {return _size;}
+///////////////////////////////////////////////////////////////////////////////
+// capacity
   bool empty() const noexcept {return cbegin() == cend();}
+  size_type size() const noexcept {return _size;}
 
+///////////////////////////////////////////////////////////////////////////////
+// modifiers
+  void clear() noexcept;
   // dummy function, TODO
   std::pair<iterator, bool> insert(const_reference value) {
     if (empty()) {
@@ -77,7 +94,6 @@ public:
       _begin = _begin->left();
     }
     ++_size;
-
     return {begin(), true};
   }
 
@@ -87,6 +103,9 @@ public:
     swap(_begin, other._begin);
     swap(_size, other._size);
   }
+  
+///////////////////////////////////////////////////////////////////////////////
+// lookup
 
 private:
   pNode _root; // store above root instead of root?
@@ -130,6 +149,8 @@ private:
   }
 };
 
+///////////////////////////////////////////////////////////////////////////////
+// non-member functions
 template <typename T, typename Compare>
 void swap(RBTree<T, Compare> lhs, RBTree<T, Compare> rhs) noexcept
 {

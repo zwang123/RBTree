@@ -12,9 +12,7 @@ class RBTreeNode {
   using pNode = std::shared_ptr<RBTreeNode<T>>;
   using cNode = std::shared_ptr<const RBTreeNode<T>>;
   using wNode = RBTreeNodePointer<T>;
-  //using wNode = pNode;
   using cwNode = RBTreeNodePointer<const T>;
-  //using cwNode = cNode;
   enum color_t {RED, BLACK};
 
 public:
@@ -27,7 +25,6 @@ public:
   template <typename std::enable_if<
     std::is_nothrow_move_constructible<value_type>::value>::type* = nullptr>
   RBTreeNode(value_type &&value) noexcept : _value(std::move(value)) {}
-
   RBTreeNode(const RBTreeNode &other) = delete;
   ~RBTreeNode() noexcept {}
 

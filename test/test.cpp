@@ -1,4 +1,5 @@
 #include <iostream>
+#include <utility>
 #include <RBTree.hpp>
 
 struct Foo {};
@@ -47,6 +48,11 @@ void testIterator()
   cout << endl;
   const RBTree<int> rbti2 (rbti);
   for (auto it = rbti2.cbegin(); it != rbti2.cend(); ++it) {
+    cout << *it << ' ';
+  }
+  cout << endl;
+  RBTree<int> rbti3 (std::move(rbti));
+  for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
     cout << *it << ' ';
   }
   cout << endl;

@@ -1,8 +1,9 @@
 #ifndef __RBTREE_NODE_POINTER_HPP_INCLUDED
 #define __RBTREE_NODE_POINTER_HPP_INCLUDED
+
 #include <memory>
-#include <utility>
 #include <type_traits>
+#include <utility>
 #ifndef NDEBUG
 #include <iostream>
 #endif
@@ -61,9 +62,7 @@ bool operator!=(RBTreeNodePointer<T> lhs, RBTreeNodePointer<U> rhs) noexcept
 template <typename T>
 void swap(RBTreeNodePointer<T> lhs, RBTreeNodePointer<T> rhs) noexcept
 {
-  using std::swap;
-  using wptr = std::weak_ptr<typename RBTreeNodePointer<T>::element_type>;
-  swap(static_cast<wptr>(lhs), static_cast<wptr>(rhs));
-  std::cout << "user swap\n";
+  lhs.swap(rhs);
 }
+
 #endif // __RBTREE_NODE_POINTER_HPP_INCLUDED
