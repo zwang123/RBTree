@@ -1,3 +1,4 @@
+#include <cassert>
 #include <iostream>
 #include <utility>
 #include <RBTree.hpp>
@@ -39,28 +40,73 @@ void testGet()
 void testIterator()
 {
   RBTree<int> rbti;
+  assert(rbti.size() == 0);
+  assert(rbti.empty());
+
   for (int i = 5; i >= 0; --i) {
     rbti.insert(i);
   }
-  for (auto it = rbti.begin(); it != rbti.end(); ++it) {
-    cout << *it << ' ';
+  assert(rbti.size() == 6);
+  assert(!rbti.empty());
+
+  {
+    int idx = 0;
+    for (auto it = rbti.begin(); it != rbti.end(); ++it) {
+      cout << *it << ' ';
+      assert(*it == idx++);
+    }
+    cout << endl;
   }
-  cout << endl;
+
+  {
+    int idx = rbti.size();
+    for (auto it = rbti.end(); it != rbti.begin();) {
+      //cout << *--it << ' ';
+      assert(*--it == --idx);
+    }
+    //cout << endl;
+  }
+
   const RBTree<int> rbti2 (rbti);
   for (auto it = rbti2.cbegin(); it != rbti2.cend(); ++it) {
     cout << *it << ' ';
   }
   cout << endl;
-  for (auto it = rbti.end(); it != rbti.begin();) {
-    cout << *--it << ' ';
+
+  {
+    RBTree<int> rbtit (rbti);
+    RBTree<int> rbti3 (std::move(rbtit));
+    cout << rbti3.size() << endl;
+    for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
+      cout << *it << ' ';
+    }
+    cout << endl;
   }
-  cout << endl;
-  RBTree<int> rbti3 (std::move(rbti));
-  cout << rbti3.size() << endl;
-  for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
-    cout << *it << ' ';
+
+  {
+    RBTree<int> rbtit (rbti);
+    RBTree<int> rbti3;
+    rbti3 = std::move(rbtit);
+    cout << rbti3.size() << endl;
+    for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
+      cout << *it << ' ';
+    }
+    cout << endl;
   }
-  cout << endl;
+
+  {
+    using std::swap;
+    RBTree<int> rbti3;
+    cout << rbti3.size() << endl;
+    swap(rbti3, rbti);
+    cout << rbti3.size() << endl;
+    cout << rbti.size() << endl;
+    for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
+      cout << *it << ' ';
+    }
+    cout << endl;
+    swap(rbti3, rbti);
+  }
 }
 
 

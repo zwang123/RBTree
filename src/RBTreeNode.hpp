@@ -66,7 +66,7 @@ private:
   wNode _prev;
   wNode _next;
 
-  color_t _color;
+  color_t _color; // DEFAULT? TODO
 };
 
 // non swappable

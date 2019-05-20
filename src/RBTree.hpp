@@ -119,7 +119,7 @@ private:
   pNode _root; // store above root instead of root?
   wNode _begin;
   pNode _end;
-  size_type _size;
+  size_type _size = 0;
 
 
   // build prev and next pointers, and size
