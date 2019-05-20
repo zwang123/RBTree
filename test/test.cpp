@@ -53,7 +53,8 @@ void testIterator()
 
   for (int i = 5; i >= 0; --i) {
     rbti.insert(i);
-    cout << rbti.serialize() << endl;
+    //cout << rbti.serialize() << endl;
+    cout << rbti << endl;
   }
   assert(rbti.size() == 6);
   assert(!rbti.empty());
@@ -256,7 +257,7 @@ void benchmark() {
   for (std::size_t num = 1000; num < 50000; num *= 2) {
     double result = benchmark<RBTree<int>>(num);
     cout << num << " " 
-         << result << " "
+         << result << "us "
          << result / static_cast<double>(num) << " "
          << result / static_cast<double>(num) / log2(num) << " "
          << result / static_cast<double>(num) / num << " "
