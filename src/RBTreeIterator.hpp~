@@ -26,8 +26,8 @@ public:
 
   template <typename T1, typename T2, typename T3>
   friend class RBTree;
-  template <typename T1, typename T2>
-  friend bool operator==(RBTreeIterator<T1>, RBTreeIterator<T2>) noexcept;
+  template <typename T, typename U>
+  friend bool operator==(RBTreeIterator<T>, RBTreeIterator<U>) noexcept;
 
 private:
   //using wNode = std::weak_ptr<const RBTreeNode<value_type>>;
