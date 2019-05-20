@@ -281,8 +281,14 @@ void testRemoval() {
   for (std::size_t i = 0; i != 50; ++i) {
     rbti.insert(i);
   }
-  //rbti.erase(rbti.find(30));
-  rbti.erase(30);
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> dist(0, 49);
+  for (std::size_t i = 0; i != 20; ++i) {
+    rbti.erase(dist(mt));
+    assert(rbti.check_parent());
+    assert(rbti.is_valid_rb_tree());
+  }
 }
 
 

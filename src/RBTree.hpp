@@ -148,16 +148,29 @@ public:
     if (_begin == _end) {clear(); return end();}
 
     if (p->leaf_child_count() == 0) {
-      pNode np = p->left();
-      while (np->right()) np = np->right();
+      //pNode np = p->left();
+      //while (np->right()) np = np->right();
       //p->swap_value(*np);
       //swap(p, np);
-      swap_but_value_prev_next(p, np);
+      swap_but_value_prev_next(p, p->prev().lock());
     }
-    assert(check_parent());
-    // TODO
+    //assert(check_parent());
+    
     // p has at most 1 leaf-child (null child)
+    if (p->is_root()) {
+      _root = p->left()?p->left():p->right();
+      // assert(_root);
+      _root->set_black();
+    } else if (p->is_red()) {
+      // assert(p->leaf_child_count() == 2);
+      p->pointer_to_this() = nullptr;
+    } else {
+      // p->parent() && p->is_black() && p->leaf_child_count <= 1
+    // TODO
+      ;
+    }
 
+    --_size;
     return next;
   }
 
