@@ -206,55 +206,25 @@ public:
           nq.emplace(++i, p->right());
           if (p->left()) assert(p->left()->parent().lock() == p);
           if (p->right()) assert(p->right()->parent().lock() == p);
-          //try {
-          //  if (p->left() && p->left()->parent().lock() != p ||
-          //     p->right() && p->right()->parent().lock() != p)
-          //    throw 0;
-          //} catch (...) {
-          //  std::cout << result << std::endl;
-          //  throw;
-          //}
       } else
           result += "nul,";
     }
 
-    /*
-    std::queue<std::pair<size_type, cNode>> nq;
-    nq.emplace(0, _root);
-    std::string result = "[";
-    //size_type depth = 0;
-    //cNode level_tail = _root;
-    //auto level_head = _root;
-    bool level_head_valid;
-    auto level_head = nq.back();
-    while (!nq.empty()) {
-        auto p = nq.front();
-        nq.pop();
-        if (level_head && p == level_head->left()) {
-          result += "\n";
-          std::cout << level_head->value() << std::endl;
-          level_head = p;
-        }
-        if (p) {
-            if (!level_head) level_head = p;
-            result += std::to_string(p->value()) + (p->is_black()?"B,":"R,");
-            nq.emplace(p->left());
-            //if (!level_head) level_head = nq.back();
-            nq.push(p->right());
-            //if (!level_head) level_head = nq.back();
-            if (p->left()) assert(p->left()->parent().lock() == p);
-            if (p->right()) assert(p->right()->parent().lock() == p);
-        } else
-            result += "null,";
-
-        //if (p == level_tail && !nq.empty()) {
-        //  level_tail = nq.back();
-        //}
-    }
-    */
     result.pop_back();
     result += "]";
     return result;
+  }
+
+  static bool check_parent(cNode n) {
+    if (!n) return true;
+    return (!n->left() || n->left()->parent() == n)
+        && (!n->right() || n->right()->parent() == n)
+        && check_parent(n->left())
+        && check_parent(n->right());
+  }
+
+  bool check_parent() const {
+    return check_parent(_root);
   }
 
   bool is_valid_rb_tree() const {

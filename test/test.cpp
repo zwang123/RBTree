@@ -191,6 +191,7 @@ void testRandomInsertion(std::size_t num)
 
     check_validity(si, rbti);
     //cout << rbti.serialize() << endl;
+    assert(rbti.check_parent());
     assert(rbti.is_valid_rb_tree());
 
     RBTree<int> rbti2(rbti);
