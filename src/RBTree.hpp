@@ -124,7 +124,7 @@ public:
   //  return {begin(), true};
   //}
   std::pair<iterator, bool> insert(const_reference value) {
-    std::cout << "inserting " << value << std::endl;
+    //std::cout << "inserting " << value << std::endl;
     pNode parent;
     auto find_result = find(_root, value, parent);
     if (find_result.second) return {find_result.first, false};
@@ -261,7 +261,8 @@ public:
     //if (_root && _root->is_red()) return false;
     //if (is_red(_root)) return false;
     //if (!check_reds_children(_root)) return false;
-    return is_black(_root) && check_reds_children(_root);
+    return is_black(_root) && check_reds_children(_root)
+      && check_black_height(_root).second;
   }
 
   bool check_reds_children(cNode n) const {
@@ -274,8 +275,14 @@ public:
            check_reds_children(n->right());
   }
   
-  //bool check_black_height(cNode n) {
-  //}
+  std::pair<size_type, bool> check_black_height(cNode n) const {
+    if (!n) return {1, true};
+    auto lh = check_black_height(n->left());
+    if (!lh.second) return {0, false};
+    auto rh = check_black_height(n->right());
+    if (!rh.second || lh.first != rh.first) return {0, false};
+    return {n->is_black() + lh.first, true};
+  }
 
   template <typename Y>
   static bool is_red(Y n) {

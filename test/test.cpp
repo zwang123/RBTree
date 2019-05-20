@@ -178,7 +178,7 @@ void testRandomInsertion(std::size_t num)
 {
   std::random_device rd;
   std::mt19937 mt(rd());
-  std::uniform_int_distribution<int> dist(0, 100);
+  std::uniform_int_distribution<int> dist(0, num);
 
   RBTree<int> rbti;
   std::set<int> si;
@@ -237,6 +237,6 @@ int main(int, char **)
   testGet();
   //testInsertion();
   testIterator();
-  testRandomInsertion(100);
+  testRandomInsertion(1000);
   return 0;
 }
