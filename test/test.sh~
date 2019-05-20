@@ -1,6 +1,0 @@
-#!/bin/bash
-if [ -n "$1" ]; then
-    make 2>&1 | head
-else
-    make && ./test.out
-fi
