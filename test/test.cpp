@@ -128,12 +128,13 @@ void testInsertion()
   auto ir = rbti.insert(4);
   cout << ir.first.lock() << ' ' << ir.second << endl;
   cout << rbti._root << ' ' 
-       << rbti._begin.lock() << ' '
+  //     << rbti._rend << ' '
+  //     << rbti._rend->next().lock() << ' '
        << rbti._end << ' '
        << rbti._size << ' '
        << endl;
-  cout << rbti._begin->value() << ' '
-       << rbti._end->value() << ' '
+  cout << *rbti.begin() << ' '
+       << *rbti.end() << ' '
        << endl;
 
   p.reset();
@@ -149,12 +150,13 @@ void testInsertion()
   ir = rbti.insert(3);
   cout << ir.first.lock() << ' ' << ir.second << endl;
   cout << rbti._root << ' ' 
-       << rbti._begin.lock() << ' '
+  //     << rbti._rend << ' '
+  //     << rbti._rend->next().lock() << ' '
        << rbti._end << ' '
        << rbti._size << ' '
        << endl;
-  cout << rbti._begin->value() << ' '
-       << rbti._end->value() << ' '
+  cout << *rbti.begin() << ' '
+       << *rbti.end() << ' '
        << endl;
   cout << rbti._root->left() << ' '
        << rbti._root->right() << ' '
@@ -167,12 +169,12 @@ void testInsertion()
 void check_validity(set<int> &si, RBTree<int> &rbti)
 {
   assert(std::equal(si.begin(), si.end(), rbti.begin()));
-  {
-    auto its = si.rbegin();
-    for (auto it = rbti.cend(); it != rbti.cbegin();)
-      assert(*--it == *its++);
-  }
-  //assert(std::equal(si.rbegin(), si.rend(), rbti.rbegin()));
+  //{
+  //  auto its = si.rbegin();
+  //  for (auto it = rbti.cend(); it != rbti.cbegin();)
+  //    assert(*--it == *its++);
+  //}
+  assert(std::equal(si.rbegin(), si.rend(), rbti.rbegin()));
   assert(si.size() == rbti.size());
   assert(si.empty() == rbti.empty());
 }

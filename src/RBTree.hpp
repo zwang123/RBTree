@@ -50,8 +50,8 @@ public:
   using const_reference = const value_type&;
   using iterator = RBTreeIterator<const T>;
   using const_iterator = RBTreeIterator<const T>;
-  //using reverse_iterator = std::reverse_iterator<iterator>;
-  //using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+  using reverse_iterator = std::reverse_iterator<iterator>;
+  using const_reverse_iterator = std::reverse_iterator<const_iterator>;
   using difference_type = typename iterator::difference_type;
   using size_type = std::size_t;
   
@@ -61,7 +61,7 @@ public:
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
     build_prev_next(_root);
-    build_begin(_root);
+    build_rend(_root);
     build_end(_root);
   }
   RBTree(RBTree &&other) noexcept {this->swap(other);}
@@ -85,18 +85,18 @@ public:
   iterator root() noexcept {return _root;}
   const_iterator root() const noexcept {return _root;}
 
-  iterator begin() noexcept {return _begin;}
-  const_iterator cbegin() const noexcept {return _begin;}
+  iterator begin() noexcept {return _rend?_rend->next():_rend;}
+  const_iterator cbegin() const noexcept {return _rend?_rend->next():_rend;}
   iterator end() noexcept {return _end;}
   const_iterator cend() const noexcept {return _end;}
-  //reverse_iterator rbegin() noexcept 
-  //{return std::make_reverse_iterator(begin());}
-  //const_reverse_iterator crbegin() const noexcept 
-  //{return std::make_reverse_iterator(cbegin());}
-  //reverse_iterator rend() noexcept 
-  //{return std::make_reverse_iterator(end());}
-  //const_reverse_iterator crend() const noexcept 
-  //{return std::make_reverse_iterator(cend());}
+  reverse_iterator rbegin() noexcept 
+  {return std::make_reverse_iterator(end());}
+  const_reverse_iterator crbegin() const noexcept 
+  {return std::make_reverse_iterator(cend());}
+  reverse_iterator rend() noexcept 
+  {return std::make_reverse_iterator(begin());}
+  const_reverse_iterator crend() const noexcept 
+  {return std::make_reverse_iterator(cbegin());}
 
 ///////////////////////////////////////////////////////////////////////////////
 // capacity
@@ -106,7 +106,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // modifiers
   void clear() noexcept {
-    _begin = _root = _end = nullptr;
+    _root = _rend = _end = nullptr;
     _size = 0;
   }
 
@@ -117,13 +117,14 @@ public:
     pNode inserted = find_result.first = std::make_shared<Node>(value);
     inserted->parent() = parent;
     if (inserted->is_root()) {
-      _begin = _root = inserted;
+      _root = inserted;
       _root->next() = _end = std::make_shared<Node>();
       _end->prev() = _root;
+      _root->prev() = _rend = std::make_shared<Node>();
+      _rend->next() = _root;
     } else {
       if (parent->left() == inserted) {
-        if (parent->prev()) parent->prev()->next() = inserted;
-        else _begin = inserted;
+        parent->prev()->next() = inserted;
         inserted->prev() = parent->prev();
         parent->prev() = inserted;
         inserted->next() = parent;
@@ -142,7 +143,7 @@ public:
   void swap(RBTree &other) noexcept {
     using std::swap;
     swap(_root, other._root);
-    swap(_begin, other._begin);
+    swap(_rend, other._rend);
     swap(_end, other._end);
     swap(_size, other._size);
   }
@@ -233,7 +234,7 @@ public:
 
 private:
   pNode _root; // store above root instead of root?
-  wNode _begin; // maybe _rend should not be _end
+  pNode _rend; // before begin()
   pNode _end;
   size_type _size = 0;
 
@@ -271,11 +272,22 @@ private:
     build_prev_next(curr->right());
   }
 
-  void build_begin(pNode curr) {
-    // assume _begin starts at nullptr
+  //void build_begin(pNode curr) {
+  //  // assume _begin starts at nullptr
+  //  if (!curr) return;
+  //  _begin = curr;
+  //  build_begin(curr->left());
+  //}
+
+  void build_rend(pNode curr) {
+    // assume _rend starts at nullptr
     if (!curr) return;
-    _begin = curr;
-    build_begin(curr->left());
+    if (!curr->prev()) {
+      curr->prev() = _rend = std::make_shared<Node>();
+      _rend->next() = curr;
+      return;
+    }
+    build_rend(curr->left());
   }
 
   void build_end(pNode curr) {
