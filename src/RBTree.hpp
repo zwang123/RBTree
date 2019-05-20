@@ -139,6 +139,68 @@ public:
     return {inserted, true};
   }
 
+  iterator erase(iterator pos) {
+    pNode p = std::const_pointer_cast<Node>(pos.lock());
+
+    wNode next = p->next();
+    next->prev() = p->prev();
+    p->prev()?p->prev()->next():_begin = p->next();
+    if (_begin == _end) {clear(); return end();}
+
+    if (p->leaf_child_count() == 0) {
+      pNode np = p->left();
+      while (np->right()) np = np->right();
+      //p->swap_value(*np);
+      //swap(p, np);
+      swap_but_value_prev_next(p, np);
+    }
+    assert(check_parent());
+    // TODO
+    // p has at most 1 leaf-child (null child)
+
+    return next;
+  }
+
+  size_type erase(const_reference value) {
+    auto it = find(value);
+    if (it == end()) return 0;
+    erase(it);
+    return 1;
+  }
+
+  //// swap two Nodes
+  //void swap(pNode lhs, pNode rhs) {
+  //  lhs->swap_value(rhs);
+  //  swap_but_value_prev_next(lhs, rhs);
+  //  swap_prev_next(lhs, rhs);
+  //}
+  
+  // swap everything except value and prev/next
+  void swap_but_value_prev_next(pNode lhs, pNode rhs) {
+    //if (lhs == rhs) return;
+
+    using std::swap;
+    
+    // swap color
+    swap(lhs->color(), rhs->color());
+
+    // swap child
+    wNode lparent = lhs, rparent = rhs;
+    swap(
+    lhs->left()?lhs->left()->parent():lparent,
+    rhs->left()?rhs->left()->parent():rparent);
+    lparent = lhs; rparent = rhs;
+    swap(
+    lhs->right()?lhs->right()->parent():lparent,
+    rhs->right()?rhs->right()->parent():rparent);
+    swap(lhs->left(), rhs->left());
+    swap(lhs->right(), rhs->right());
+
+    // swap parent
+    swap(pointer_to_this(lhs), pointer_to_this(rhs));
+    swap(lhs->parent(), rhs->parent());
+  }
+
   void swap(RBTree &other) noexcept {
     using std::swap;
     swap(_root, other._root);
@@ -291,6 +353,11 @@ private:
 
 ///////////////////////////////////////////////////////////////////////////////
 // insertion/removal
+  pNode &pointer_to_this(pNode p) {
+    // assert(p);
+    return p->is_root()?_root:p->pointer_to_this();
+  }
+
   static void rotate_left(pNode &ptr2this) {
     pNode curr = ptr2this;
     // assert(curr);
@@ -308,7 +375,7 @@ private:
     // assert(curr);
     pNode p = curr.lock();
     wNode parent = p->parent();
-    pNode &ptr2this = p->is_root()?_root:p->pointer_to_this();
+    pNode &ptr2this = pointer_to_this(p);
     // assert(curr->right());
     ptr2this = p->right();
     p->right()->parent() = parent;
@@ -334,7 +401,7 @@ private:
     // assert(curr);
     pNode p = curr.lock();
     wNode parent = p->parent();
-    pNode &ptr2this = p->is_root()?_root:p->pointer_to_this();
+    pNode &ptr2this = pointer_to_this(p);
     // assert(curr->left());
     ptr2this = p->left();
     p->left()->parent() = parent;

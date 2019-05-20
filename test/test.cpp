@@ -276,6 +276,16 @@ ostream &output(std::size_t num = 30, ostream &os = std::cout) {
   return os << rbti << std::endl;
 }
 
+void testRemoval() {
+  RBTree<int> rbti;
+  for (std::size_t i = 0; i != 50; ++i) {
+    rbti.insert(i);
+  }
+  //rbti.erase(rbti.find(30));
+  rbti.erase(30);
+}
+
+
 
 int main(int, char **)
 {

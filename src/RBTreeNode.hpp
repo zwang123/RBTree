@@ -38,10 +38,10 @@ public:
   reference value() noexcept {return _value;}
   const_reference value() const noexcept {return _value;}
 
-  void swap_value(RBTreeNode &other) noexcept {
-    using std::swap;
-    swap(_value, other._value);
-  }
+  //void swap_value(RBTreeNode &other) noexcept {
+  //  using std::swap;
+  //  swap(_value, other._value);
+  //}
 
   color_t &color() noexcept {return _color;}
   color_t color() const noexcept {return _color;}
@@ -51,7 +51,7 @@ public:
   bool is_red() const noexcept {return _color == RED;}
   bool is_black() const noexcept {return _color == BLACK;}
 
-  bool is_leaf() const noexcept {return !(_left || _right);}
+  bool leaf_child_count() const noexcept {return !_left + !_right;}
   bool is_root() const noexcept {return !_parent;}
   bool is_end() const noexcept {return !_next;}
 
