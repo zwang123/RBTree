@@ -13,6 +13,7 @@ struct Base {};
 struct Derived : Base {};
 
 using std::cout;
+using std::ostream;
 using std::set;
 using std::endl;
 //using std::chrono;
@@ -261,6 +262,17 @@ void benchmark() {
   }
 }
 
+ostream &output(std::size_t num = 30, ostream &os = std::cout) {
+  RBTree<int> rbti;
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> dist(0, num);
+  for (std::size_t i = 0; i != num; ++i) {
+    rbti.insert(dist(mt));
+  }
+  return os << rbti << std::endl;
+}
+
 
 int main(int, char **)
 {
@@ -270,5 +282,6 @@ int main(int, char **)
   testIterator();
   testRandomInsertion(1000);
   benchmark();
+  output();
   return 0;
 }

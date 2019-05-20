@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <iostream>
 #include <iterator>
 #include <memory>
 #include <type_traits>
@@ -14,7 +15,6 @@ class RBTree;
 #include <RBTreeNodePointer.hpp>
 
 #ifndef NDEBUG
-#include <iostream>
 #include <queue>
 #include <string>
 //#include <vector>
@@ -22,6 +22,8 @@ class RBTree;
 
 template <typename T, typename Compare = std::less<T>, typename Enable = void>
 class RBTree;
+template <typename T, typename Compare>
+std::ostream& operator<<(std::ostream &, const RBTree<T, Compare> &);
 
 template <typename T, typename Compare>
 class RBTree<T, Compare, 
@@ -33,6 +35,7 @@ class RBTree<T, Compare,
   using cNode = std::shared_ptr<const Node>;
   using wNode = RBTreeNodePointer<T>;
 
+  friend std::ostream& operator<< <> (std::ostream &, const RBTree &);
 #ifndef NDEBUG
   friend void testInsertion();
 #endif
@@ -437,6 +440,72 @@ template <typename T, typename Compare>
 void swap(RBTree<T, Compare> &lhs, RBTree<T, Compare> &rhs) noexcept
 {
   lhs.swap(rhs);
+}
+
+//#include <iostream>
+#include <queue>
+#include <string>
+template <typename T, typename Compare>
+std::ostream& operator<<(std::ostream &os, const RBTree<T, Compare> &rbt)
+{
+  using size_type = typename RBTree<T, Compare>::size_type;
+  using cNode = typename RBTree<T, Compare>::cNode;
+
+  static constexpr size_type SPACE = 4;
+  std::queue<std::pair<size_type, cNode>> nq;
+  size_type curr = 0;
+  size_type next_enter = 1;
+  nq.emplace(0, rbt._root);
+  std::vector<std::string> lines;
+  std::string line;
+  while (!nq.empty()) {
+    size_type i;
+    cNode p;
+    std::tie(i, p) = nq.front();
+    nq.pop();
+    if (i >= next_enter) {
+      curr = next_enter;
+      line.pop_back();
+      lines.push_back(std::move(line));
+      line.clear();
+      next_enter <<= 1;
+      ++next_enter;
+    }
+    line += std::string((i - curr) * SPACE, ' ');
+    curr = i + 1;
+    if (p) {
+      auto tmp = std::to_string(p->value()) + (p->is_black()?"B,":"R,");
+      if(tmp.size() < SPACE) 
+        tmp = std::string((SPACE-tmp.size()), ' ') + tmp;
+      line += tmp;
+      nq.emplace(++(i<<=1), p->left());
+      nq.emplace(++i, p->right());
+    } else line += "nul,";
+  }
+  // last line is all nullptr
+  //line.pop_back();
+  //lines.push_back(std::move(line));
+
+  os << "[" << std::endl;
+  //size_type maxLen = 1;
+  //for (size_type i = 1; i != lines.size(); ++i)
+  //  maxLen *= 2;
+  //for (size_type i = 0, x = 1; i != lines.size(); ++i) {
+  //  os << std::string(SPACE / 2 * (maxLen - x), ' ') << lines[i] << std::endl;
+  //  x *= 2;
+  //}
+  size_type maxLen = 1;
+  for (size_type i = 1; i != lines.size(); ++i)
+    maxLen *= 2;
+  for (const auto &l : lines) {
+    std::string delim (SPACE / 2 * (maxLen - 1), ' ');
+    for (size_type pos = 0; pos < l.size(); pos += SPACE) {
+      os << delim << l.substr(pos, SPACE) << delim;
+    }
+    maxLen /= 2;
+    os << std::endl;
+  }
+  return os << "]";
 }
 
 #endif // __RBTREE_HPP_INCLUDED
