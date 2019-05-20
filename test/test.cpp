@@ -39,7 +39,7 @@ void testGet()
 void testIterator()
 {
   RBTree<int> rbti;
-  for (int i = 0; i < 5; ++i) {
+  for (int i = 5; i >= 0; --i) {
     rbti.insert(i);
   }
   for (auto it = rbti.begin(); it != rbti.end(); ++it) {
@@ -51,7 +51,12 @@ void testIterator()
     cout << *it << ' ';
   }
   cout << endl;
+  for (auto it = rbti.end(); it != rbti.begin();) {
+    cout << *--it << ' ';
+  }
+  cout << endl;
   RBTree<int> rbti3 (std::move(rbti));
+  cout << rbti3.size() << endl;
   for (auto it = rbti3.cbegin(); it != rbti3.cend(); ++it) {
     cout << *it << ' ';
   }

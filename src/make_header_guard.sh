@@ -110,7 +110,7 @@ except:
     raise
 '
 
-py='python3.5'
+py='python3'
 
 #add_header () {
 #    fname="$1"

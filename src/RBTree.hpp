@@ -46,6 +46,8 @@ public:
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
     build_prev_next(_root);
+    build_begin(_root);
+    build_end(_root);
   }
   RBTree(RBTree &&other) noexcept {this->swap(other);}
 
@@ -70,9 +72,8 @@ public:
 
   iterator begin() noexcept {return _begin;}
   const_iterator cbegin() const noexcept {return _begin;}
-  // end is always nullptr
-  constexpr iterator end() noexcept {return iterator();}
-  constexpr const_iterator cend() const noexcept {return const_iterator();}
+  iterator end() noexcept {return _end;}
+  const_iterator cend() const noexcept {return _end;}
 
 ///////////////////////////////////////////////////////////////////////////////
 // capacity
@@ -81,11 +82,17 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // modifiers
-  void clear() noexcept;
+  void clear() noexcept {
+    _begin = _root = _end = nullptr;
+    _size = 0;
+  }
+
   // dummy function, TODO
   std::pair<iterator, bool> insert(const_reference value) {
     if (empty()) {
       _begin = _root = std::make_shared<Node>(value);
+      _root->next() = _end = std::make_shared<Node>();
+      _end->prev() = _root;
     } else {
       _begin->left() = std::make_shared<Node>(value);
       _begin->left()->parent() = _begin;
@@ -101,6 +108,7 @@ public:
     using std::swap;
     swap(_root, other._root);
     swap(_begin, other._begin);
+    swap(_end, other._end);
     swap(_size, other._size);
   }
   
@@ -109,16 +117,22 @@ public:
 
 private:
   pNode _root; // store above root instead of root?
-  wNode _begin; // TODO should be weak_ptr
+  wNode _begin;
+  pNode _end;
   size_type _size;
 
 
-  // build prev and next pointers, and size and begin
+  // build prev and next pointers, and size
   void build_prev_next(pNode curr) {
     if (curr == nullptr) return;
 
     ++_size;
-    if (_begin == curr->parent()) _begin = curr;
+    //if (_begin == curr->parent() &&
+    //    (curr->is_root() || curr == curr->parent()->left())) 
+    //  _begin = curr;
+    //if (_end == curr->parent()) {
+    //  _end = curr;
+    //}
 
     // assume all prev and next starts at nullptr
     if (curr->right()) {
@@ -137,6 +151,24 @@ private:
     build_prev_next(curr->right());
   }
 
+  void build_begin(pNode curr) {
+    // assume _begin starts at nullptr
+    if (!curr) return;
+    _begin = curr;
+    build_begin(curr->left());
+  }
+
+  void build_end(pNode curr) {
+    // assume _begin starts at nullptr
+    if (!curr) return;
+    if (!curr->next()) {
+      curr->next() = _end = std::make_shared<Node>();
+      _end->prev() = curr;
+      return;
+    }
+    build_end(curr->right());
+  }
+
   static pNode copy_node(cNode src) {
     if (src == nullptr) return nullptr;
     pNode dest = std::make_shared<Node>(src->value());
@@ -152,7 +184,7 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 // non-member functions
 template <typename T, typename Compare>
-void swap(RBTree<T, Compare> lhs, RBTree<T, Compare> rhs) noexcept
+void swap(RBTree<T, Compare> &lhs, RBTree<T, Compare> &rhs) noexcept
 {
   lhs.swap(rhs);
 }

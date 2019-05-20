@@ -2,5 +2,5 @@
 if [ -n "$1" ]; then
     make && ./test.out
 else
-    make 2>&1 | head
+    make 2>&1 | head -n20
 fi

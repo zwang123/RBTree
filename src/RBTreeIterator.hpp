@@ -77,7 +77,7 @@ bool operator!=(RBTreeIterator<T> lhs, RBTreeIterator<U> rhs) noexcept
 }
 
 template <typename T>
-void swap(RBTreeIterator<T> lhs, RBTreeIterator<T> rhs) noexcept
+void swap(RBTreeIterator<T> &lhs, RBTreeIterator<T> &rhs) noexcept
 {
   lhs.swap(rhs);
 }

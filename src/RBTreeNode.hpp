@@ -47,8 +47,9 @@ public:
   color_t &color() noexcept {return _color;}
   color_t color() const noexcept {return _color;}
 
-  //bool is_leaf() const noexcept {return !(_left || _right);}
-  bool is_root() const noexcept {return _parent().lock() == wNode();}
+  bool is_leaf() const noexcept {return !(_left || _right);}
+  bool is_root() const noexcept {return !_parent;}
+  bool is_end() const noexcept {return !_next;}
 
   void swap_value(RBTreeNode &other) noexcept {
     using std::swap;

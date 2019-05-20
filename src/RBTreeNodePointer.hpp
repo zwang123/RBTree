@@ -60,7 +60,7 @@ bool operator!=(RBTreeNodePointer<T> lhs, RBTreeNodePointer<U> rhs) noexcept
 }
 
 template <typename T>
-void swap(RBTreeNodePointer<T> lhs, RBTreeNodePointer<T> rhs) noexcept
+void swap(RBTreeNodePointer<T> &lhs, RBTreeNodePointer<T> &rhs) noexcept
 {
   lhs.swap(rhs);
 }
