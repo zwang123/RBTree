@@ -48,13 +48,43 @@ public:
 };
 
 template <typename T, typename U>
-bool operator==(RBTreeNodePointer<T> lhs, RBTreeNodePointer<U> rhs) noexcept
+bool operator==(const RBTreeNodePointer<T> &lhs, 
+                const RBTreeNodePointer<U> &rhs) noexcept
 {
   return lhs.lock() == rhs.lock();
 }
 
 template <typename T, typename U>
-bool operator!=(RBTreeNodePointer<T> lhs, RBTreeNodePointer<U> rhs) noexcept
+bool operator==(const std::shared_ptr<T> &lhs, 
+                const RBTreeNodePointer<U> &rhs) noexcept
+{
+  return lhs == rhs.lock();
+}
+
+template <typename T, typename U>
+bool operator==(const RBTreeNodePointer<T> &lhs, 
+                const std::shared_ptr<U> &rhs) noexcept
+{
+  return lhs.lock() == rhs;
+}
+
+template <typename T, typename U>
+bool operator!=(const RBTreeNodePointer<T> &lhs, 
+                const RBTreeNodePointer<U> &rhs) noexcept
+{
+  return !(lhs == rhs);
+}
+
+template <typename T, typename U>
+bool operator!=(const std::shared_ptr<T> &lhs, 
+                const RBTreeNodePointer<U> &rhs) noexcept
+{
+  return !(lhs == rhs);
+}
+
+template <typename T, typename U>
+bool operator!=(const RBTreeNodePointer<T> &lhs, 
+                const std::shared_ptr<U> &rhs) noexcept
 {
   return !(lhs == rhs);
 }

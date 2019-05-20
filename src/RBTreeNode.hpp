@@ -8,7 +8,8 @@ class RBTreeNode;
 #include <RBTreeNodePointer.hpp>
 
 template <typename T>
-class RBTreeNode {
+class RBTreeNode :
+public std::enable_shared_from_this<RBTreeNode<T>> {
   using pNode = std::shared_ptr<RBTreeNode<T>>;
   using cNode = std::shared_ptr<const RBTreeNode<T>>;
   using wNode = RBTreeNodePointer<T>;
@@ -38,6 +39,23 @@ public:
 
   wNode &parent() noexcept {return _parent;}
   cwNode parent() const noexcept {return _parent;}
+  // must not be root
+  pNode &sibling() 
+    // pNode::get()?
+  {return parent()->left() == this->shared_from_this() ? 
+    parent()->right() : parent()->left();}
+  cNode sibling() const
+  {return parent()->left() == this->shared_from_this() ? 
+    parent()->right() : parent()->left();}
+  pNode &pointer_to_this()
+  {return parent()->left() == this->shared_from_this() ? 
+    parent()->left() : parent()->right();}
+  
+  // parent must not be root
+  pNode &uncle() {return parent()->sibling();}
+  cNode uncle() const {return parent()->sibling();}
+  wNode &grandparent() {return parent()->parent();}
+  cwNode grandparent() const {return parent()->parent();}
 
   wNode &prev() noexcept {return _prev;}
   cwNode prev() const noexcept {return _prev;}
@@ -46,6 +64,11 @@ public:
 
   color_t &color() noexcept {return _color;}
   color_t color() const noexcept {return _color;}
+
+  void set_red() noexcept {_color = RED;}
+  void set_black() noexcept {_color = BLACK;}
+  bool is_red() const noexcept {return _color == RED;}
+  bool is_black() const noexcept {return _color == BLACK;}
 
   bool is_leaf() const noexcept {return !(_left || _right);}
   bool is_root() const noexcept {return !_parent;}
@@ -66,7 +89,7 @@ private:
   wNode _prev;
   wNode _next;
 
-  color_t _color; // DEFAULT? TODO
+  color_t _color = RED; // DEFAULT? TODO
 };
 
 // non swappable

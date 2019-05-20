@@ -2,6 +2,7 @@
 #define __RBTREE_ITERATOR_HPP_INCLUDED
 
 #include <cstddef>
+#include <iterator>
 #include <type_traits>
 template <typename, typename>
 class RBTreeIterator;
@@ -29,7 +30,11 @@ public:
   template <typename T1, typename T2, typename T3>
   friend class RBTree;
   template <typename T1, typename T2>
-  friend bool operator==(RBTreeIterator<T1>, RBTreeIterator<T2>) noexcept;
+  friend bool operator==(const RBTreeIterator<T1> &, 
+                         const RBTreeIterator<T2> &) noexcept;
+#ifndef NDEBUG
+  friend void testInsertion();
+#endif
 
 private:
   using wNode = RBTreeNodePointer<T>;
@@ -65,13 +70,15 @@ private:
 };
 
 template <typename T, typename U>
-bool operator==(RBTreeIterator<T> lhs, RBTreeIterator<U> rhs) noexcept
+bool operator==(const RBTreeIterator<T> &lhs, 
+                const RBTreeIterator<U> &rhs) noexcept
 {
   return lhs.lock() == rhs.lock();
 }
 
 template <typename T, typename U>
-bool operator!=(RBTreeIterator<T> lhs, RBTreeIterator<U> rhs) noexcept
+bool operator!=(const RBTreeIterator<T> &lhs, 
+                const RBTreeIterator<U> &rhs) noexcept
 {
   return !(lhs == rhs);
 }
