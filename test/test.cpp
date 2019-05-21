@@ -284,6 +284,17 @@ std::size_t benchmark(std::size_t num) {
 }
 
 template <typename T>
+std::vector<T> generate_random_vector(std::size_t num) {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<T> dist(0, num);
+  std::vector<T> vec;
+  std::generate_n(std::back_inserter(vec), num,
+      [&dist, &mt](){return dist(mt);});
+  return std::move(vec);
+}
+
+template <typename T>
 std::size_t benchmark_removal(T &rbti, 
     std::vector<typename T::iterator> vit) {
   auto beg = std::chrono::high_resolution_clock::now();
@@ -304,6 +315,46 @@ void benchmark() {
          << result / static_cast<double>(num) / log2(num) << " "
          << result / static_cast<double>(num) / num << " "
          << endl;
+  }
+}
+
+void benchmark_insertion() {
+  for (std::size_t num = 1000; num < 50000; num *= 2) {
+    auto seq = generate_random_vector<int>(num);
+
+    auto beg = std::chrono::high_resolution_clock::now();
+    RBTree<int> rbti(seq.begin(), seq.end());
+    auto end = std::chrono::high_resolution_clock::now();
+    double resultrbti = std::chrono::duration_cast<
+      std::chrono::microseconds>
+      (end-beg).count();
+
+    beg = std::chrono::high_resolution_clock::now();
+    std::set<int> si(seq.begin(), seq.end());
+    end = std::chrono::high_resolution_clock::now();
+    double resultsi = std::chrono::duration_cast<
+      std::chrono::microseconds>
+      (end-beg).count();
+
+    cout << num << " " << si.size() << std::endl;
+
+    cout << "\t"
+         << resultrbti << "us "
+         << resultrbti / static_cast<double>(num) << " "            
+         << resultrbti / static_cast<double>(num) / log2(num) << " "
+         << resultrbti / static_cast<double>(num) / num << " "      
+         << std::endl;
+
+    cout << "\t"
+         << resultsi << "us "
+         << resultsi / static_cast<double>(num) << " "            
+         << resultsi / static_cast<double>(num) / log2(num) << " "
+         << resultsi / static_cast<double>(num) / num << " "      
+         << std::endl;
+    
+    cout << "\t\tmultiplier ";
+    cout << resultrbti/resultsi;
+    cout << endl;
   }
 }
 
@@ -441,66 +492,6 @@ void benchmark_removal() {
     cout << "\t\tmultiplier ";
     cout << resultrbti/resultsi;
     cout << endl;
-
-    //std::vector<std::size_t> idx;
-    //for (std::size_t i = 0; i != si.size(); ++i) {
-    //  idx.push_back(dist(mt)%si.size());
-    //}
-    //remove_duplicate(idx);
-
-    //{
-    //for (auto xx:idx) cout << xx << ' ';
-    //cout <<endl;
-    //}
-
-
-    //double result, resultrbt;
-
-    //{
-    ////cout << __LINE__ << std::endl;
-    //auto itv = build_iterator_vector(si);
-    //auto n = itv.size();
-    //cout << num << " " << setsize << " " << n << " ";
-    ////cout << __LINE__ << std::endl;
-    //result = benchmark_removal(si, itv);
-    ////cout << __LINE__ << std::endl;
-    //double nlogn = setsize * log2(setsize) - (setsize-n) * log2(setsize-n) -
-    //               n * log2(std::exp(1));
-    //cout << result << "us "
-    //     << result / static_cast<double>(n) << " "
-    //     << result / nlogn << " "
-    //     << result / static_cast<double>(n) / n << " ";
-    //cout << std::endl;
-    //}
-    //{
-    ////cout << __LINE__ << std::endl;
-    ////cout << __LINE__ << std::endl;
-    //result = benchmark_removal(rbti, itv.first);
-    ////cout << __LINE__ << std::endl;
-    //cout << result << "us "
-    //     << result / static_cast<double>(n) << " "
-    //     << result / nlogn << " "
-    //     << result / static_cast<double>(n) / n << " ";
-    //cout << std::endl;
-    //}
-
-    //cout << "RBTree ";
-    //result = benchmark_removal(rbti, build_iterator_vector(rbti, idx));
-    //resultrbt = result;
-    //cout << result << "us "
-    //     << result / static_cast<double>(num) << " "
-    //     << result / static_cast<double>(num) / log2(num) << " "
-    //     << result / static_cast<double>(num) / num << " ";
-    //cout << "std::set ";
-    //result = benchmark_removal(si, build_iterator_vector(si, idx));
-    //cout << result << "us "
-    //     << result / static_cast<double>(num) << " "
-    //     << result / static_cast<double>(num) / log2(num) << " "
-    //     << result / static_cast<double>(num) / num << " ";
-
-    //cout << "multiplier ";
-    //cout << resultrbt/result;
-    //cout << endl;
   }
 }
 
@@ -646,6 +637,7 @@ int main(int, char **)
   testRandomInsertion(1000);
   testRandomRemoval(4000);
   benchmark();
+  benchmark_insertion();
   benchmark_removal();
   output();
   return 0;

@@ -168,7 +168,6 @@ public:
     //assert(check_parent());
     //assert(p->leaf_child_count() >= 0);
     
-
     if (p->is_red()) {
       // assert(p->leaf_child_count() == 2);
       // assert(!p->is_root());
@@ -483,17 +482,6 @@ private:
       sib->right()->set_black();
       swap(sib->parent()->color(), sib->color());
       rotate_left(p->parent());
-
-      
-      //{
-      //  pNode &ptr2sib = p->parent()->right();
-      //  //assert(sib->is_black());
-      //  if erase_repair_tree_34(p, sib) return;
-      //  if is_black(sib->right()) {
-      //    // assert(is_red(sib->left()));
-      //    rotate_right();
-      //  }
-      //}
     } else {
       pNode sib = p->parent()->left();
       if(is_red(sib)) {
@@ -573,12 +561,10 @@ private:
       pNode &parent) {
     if (!curr) return {curr, false};
     if (_comp(curr->value(), value)) {
-    //if (Compare()(curr->value(), value)) {
       parent = curr; 
       return find(curr->right(), value, parent);
     }
     if (_comp(value, curr->value())) {
-    //if (Compare()(value, curr->value())) {
       parent = curr;
       return find(curr->left(), value, parent);
     }
