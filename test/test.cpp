@@ -5,6 +5,7 @@
 #include <cstddef>
 #include <iostream>
 #include <iterator>
+#include <numeric>
 #include <random>
 #include <set>
 #include <unordered_set>
@@ -300,6 +301,32 @@ std::vector<typename T::iterator> build_iterator_vector(T& container,
 }
 
 template <typename T>
+std::vector<typename T::iterator> build_iterator_vector(T& container)
+{
+  using std::swap;
+
+  if (container.empty()) return {};
+  std::vector<typename T::iterator> rtn(container.size());
+  std::iota(rtn.begin(), rtn.end(), container.begin());
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> dist(0, container.size()-1);
+  for (std::size_t i = 0; i != container.size(); ++i) {
+    if (dist(mt) % 5 < 3) {
+      //60%
+      swap(rtn[dist(mt)], rtn[dist(mt)]);
+    } else {
+      rtn[dist(mt)] = container.end();
+    }
+  }
+  auto end = std::remove_if(rtn.begin(), rtn.end(),
+      [&container](const auto &it){return it==container.end();});
+  rtn.erase(end, rtn.end());
+  return rtn;
+}
+
+template <typename T>
 void remove_duplicate(T &c)
 {
   std::unordered_set<typename T::value_type> s;
@@ -323,29 +350,31 @@ void benchmark_removal() {
       si.insert(x);
     }
 
-    std::vector<std::size_t> idx;
-    for (std::size_t i = 0; i != si.size(); ++i) {
-      idx.push_back(dist(mt)%si.size());
-    }
-    remove_duplicate(idx);
+    auto setsize = si.size();
+
+    //std::vector<std::size_t> idx;
+    //for (std::size_t i = 0; i != si.size(); ++i) {
+    //  idx.push_back(dist(mt)%si.size());
+    //}
+    //remove_duplicate(idx);
 
     //{
     //for (auto xx:idx) cout << xx << ' ';
     //cout <<endl;
     //}
 
-    auto n = idx.size();
-    cout << num << " " << n << " ";
 
     double result, resultrbt;
 
     {
     //cout << __LINE__ << std::endl;
-    auto itv = build_iterator_vector(si, idx);
+    auto itv = build_iterator_vector(si);
+    auto n = itv.size();
+    cout << num << " " << setsize << " " << n << " ";
     //cout << __LINE__ << std::endl;
     result = benchmark_removal(si, itv);
     //cout << __LINE__ << std::endl;
-    double nlogn = num * log2(num) - (num-n) * log2(num-n) -
+    double nlogn = setsize * log2(setsize) - (setsize-n) * log2(setsize-n) -
                    n * log2(std::exp(1));
     cout << result << "us "
          << result / static_cast<double>(n) << " "
