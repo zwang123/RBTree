@@ -146,7 +146,11 @@ public:
     // prev/next
     wNode next = p->next();
     next->prev() = p->prev();
-    p->prev()?p->prev()->next():_begin = p->next();
+    (p->prev()?p->prev()->next():_begin) = next;
+
+    //std::cout << (next).lock() << std::endl;
+    //std::cout << (p->prev()?p->prev()->next():_begin).lock() << std::endl;
+    //std::cout << (p->next()->prev()).lock() << std::endl;
 
     // empty()
     if (_begin == _end) {clear(); return end();}
@@ -649,7 +653,10 @@ std::ostream& operator<<(std::ostream &os, const RBTree<T, Compare> &rbt)
   //line.pop_back();
   //lines.push_back(std::move(line));
 
-  os << "[" << std::endl;
+  os << "[";
+  if (lines.empty()) return os << "nul]";
+  os << std::endl;
+
   //size_type maxLen = 1;
   //for (size_type i = 1; i != lines.size(); ++i)
   //  maxLen *= 2;

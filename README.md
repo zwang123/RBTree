@@ -4,5 +4,6 @@ This is an experimental implementation of [red-black tree](https://en.wikipedia.
 
 ## TODO List
 
-* Node deletion
+* Node deletion debug
+* Iterator validity check for insertion and deletion
 * ...

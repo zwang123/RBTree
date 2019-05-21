@@ -34,6 +34,7 @@ public:
                          const RBTreeIterator<T2> &) noexcept;
 #ifndef NDEBUG
   friend void testInsertion();
+  friend void testRandomRemoval(std::size_t);
 #endif
 
 private:

@@ -1,10 +1,13 @@
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <iterator>
 #include <random>
 #include <set>
+#include <unordered_set>
 #include <utility>
 #include <RBTree.hpp>
 
@@ -169,15 +172,20 @@ void testInsertion()
 
 void check_validity(set<int> &si, RBTree<int> &rbti)
 {
+  //cout << __LINE__ << endl;
   assert(std::equal(si.begin(), si.end(), rbti.begin()));
+  //cout << __LINE__ << endl;
   //{
   //  auto its = si.rbegin();
   //  for (auto it = rbti.cend(); it != rbti.cbegin();)
   //    assert(*--it == *its++);
   //}
   assert(std::equal(si.rbegin(), si.rend(), rbti.rbegin()));
+  //cout << __LINE__ << endl;
   assert(si.size() == rbti.size());
+  //cout << __LINE__ << endl;
   assert(si.empty() == rbti.empty());
+  //cout << __LINE__ << endl;
 }
 
 
@@ -253,6 +261,18 @@ std::size_t benchmark(std::size_t num) {
     (end-beg).count();
 }
 
+template <typename T>
+std::size_t benchmark_removal(T &rbti, 
+    std::vector<typename T::iterator> vit) {
+  auto beg = std::chrono::high_resolution_clock::now();
+  for (auto it : vit) {
+    rbti.erase(it);
+  }
+  auto end = std::chrono::high_resolution_clock::now();
+  return std::chrono::duration_cast<std::chrono::microseconds>
+    (end-beg).count();
+}
+
 void benchmark() {
   for (std::size_t num = 1000; num < 50000; num *= 2) {
     double result = benchmark<RBTree<int>>(num);
@@ -262,6 +282,95 @@ void benchmark() {
          << result / static_cast<double>(num) / log2(num) << " "
          << result / static_cast<double>(num) / num << " "
          << endl;
+  }
+}
+
+template <typename T>
+std::vector<typename T::iterator> build_iterator_vector(T& container, 
+    const std::vector<std::size_t> &idx)
+{
+  if (container.empty()) return {};
+  std::vector<typename T::iterator> rtn;
+  for (const auto i : idx) {
+    auto it = container.begin();
+    std::advance(it, i);
+    rtn.push_back(std::move(it));
+  }
+  return std::move(rtn);
+}
+
+template <typename T>
+void remove_duplicate(T &c)
+{
+  std::unordered_set<typename T::value_type> s;
+  auto end = std::remove_if(c.begin(), c.end(),
+      [&s](const auto &i) {return !s.insert(i).second;});
+  c.erase(end, c.end());
+}
+
+void benchmark_removal() {
+  //for (std::size_t num = 1000; num < 50000; num *= 2) {
+  for (std::size_t num = 50; num < 5000000; num *= 2) {
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_int_distribution<int> dist(0, num);
+
+    RBTree<int> rbti;
+    std::set<int> si;
+    for (std::size_t i = 0; i != num; ++i) {
+      auto x = dist(mt);
+      rbti.insert(x);
+      si.insert(x);
+    }
+
+    std::vector<std::size_t> idx;
+    for (std::size_t i = 0; i != si.size(); ++i) {
+      idx.push_back(dist(mt)%si.size());
+    }
+    remove_duplicate(idx);
+
+    //{
+    //for (auto xx:idx) cout << xx << ' ';
+    //cout <<endl;
+    //}
+
+    auto n = idx.size();
+    cout << num << " " << n << " ";
+
+    double result, resultrbt;
+
+    {
+    //cout << __LINE__ << std::endl;
+    auto itv = build_iterator_vector(si, idx);
+    //cout << __LINE__ << std::endl;
+    result = benchmark_removal(si, itv);
+    //cout << __LINE__ << std::endl;
+    double nlogn = num * log2(num) - (num-n) * log2(num-n) -
+                   n * log2(std::exp(1));
+    cout << result << "us "
+         << result / static_cast<double>(n) << " "
+         << result / nlogn << " "
+         << result / static_cast<double>(n) / n << " ";
+    cout << std::endl;
+    }
+
+    //cout << "RBTree ";
+    //result = benchmark_removal(rbti, build_iterator_vector(rbti, idx));
+    //resultrbt = result;
+    //cout << result << "us "
+    //     << result / static_cast<double>(num) << " "
+    //     << result / static_cast<double>(num) / log2(num) << " "
+    //     << result / static_cast<double>(num) / num << " ";
+    //cout << "std::set ";
+    //result = benchmark_removal(si, build_iterator_vector(si, idx));
+    //cout << result << "us "
+    //     << result / static_cast<double>(num) << " "
+    //     << result / static_cast<double>(num) / log2(num) << " "
+    //     << result / static_cast<double>(num) / num << " ";
+
+    //cout << "multiplier ";
+    //cout << resultrbt/result;
+    //cout << endl;
   }
 }
 
@@ -286,8 +395,56 @@ void testRemoval() {
   std::uniform_int_distribution<int> dist(0, 49);
   for (std::size_t i = 0; i != 20; ++i) {
     rbti.erase(dist(mt));
+
     assert(rbti.check_parent());
     assert(rbti.is_valid_rb_tree());
+  }
+}
+
+void testRandomRemoval(std::size_t num) {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> dist(0, num);
+
+  RBTree<int> rbti;
+  std::set<int> si;
+  for (std::size_t i = 0; i != num; ++i) {
+    auto x = dist(mt);
+    rbti.insert(x);
+    si.insert(x);
+  }
+
+  std::size_t empty_counter = 0;
+  for (std::size_t i = 0; empty_counter != 10; ++i) {
+    //auto x = dist(mt);
+    int x;
+    if (rbti.empty()) {
+      x = dist(mt);
+      ++empty_counter;
+    } else {
+      auto it = rbti.begin();
+      //for (auto it = rbti.begin(); it != rbti.end(); ++it) {
+      //  std::cout << it.lock() << std::endl << " " << *it << std::endl;
+      //}
+      std::advance(it, dist(mt)%rbti.size());
+      x = *it + dist(mt) % 2;
+    }
+    //cout << rbti << endl;
+    //cout << i << " delete " << x << endl;
+    //cout << __LINE__ << endl;
+    rbti.erase(x);
+    //cout << rbti << endl;
+    //cout << *rbti.begin() << endl;
+    //cout << *rbti.rbegin() << endl;
+    //cout << __LINE__ << endl;
+    si.erase(x);
+    //cout << __LINE__ << endl;
+    assert(rbti.check_parent());
+    //cout << __LINE__ << endl;
+    assert(rbti.is_valid_rb_tree());
+    //cout << __LINE__ << endl;
+    check_validity(si, rbti);
+    //cout << __LINE__ << endl;
   }
 }
 
@@ -299,8 +456,10 @@ int main(int, char **)
   testGet();
   //testInsertion();
   testIterator();
-  testRandomInsertion(1000);
-  benchmark();
+  //testRandomInsertion(1000);
+  //testRandomRemoval(4000);
+  //benchmark();
+  benchmark_removal();
   output();
   return 0;
 }
