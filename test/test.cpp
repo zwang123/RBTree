@@ -199,10 +199,20 @@ void testRandomInsertion(std::size_t num)
   RBTree<int> rbti;
   std::set<int> si;
   check_validity(si, rbti);
+
+  std::vector<RBTree<int>::iterator> vitrbti;
+  std::vector<std::set<int>::iterator> vitsi;
+
   for (std::size_t i = 0; i != num; ++i) {
     auto x = dist(mt);
-    rbti.insert(x);
-    si.insert(x);
+    auto ir1 = rbti.insert(x);
+    if (ir1.second) vitrbti.push_back(ir1.first);
+    auto ir2 = si.insert(x);
+    if (ir2.second) vitsi.push_back(ir2.first);
+
+    assert(std::equal(vitrbti.begin(), vitrbti.end(),
+                      vitsi.begin(), [](const auto &l, const auto &r)
+                      {return *l==*r;}));
 
 
     check_validity(si, rbti);
@@ -210,17 +220,19 @@ void testRandomInsertion(std::size_t num)
     assert(rbti.check_parent());
     assert(rbti.is_valid_rb_tree());
 
-    RBTree<int> rbti2(rbti);
-    check_validity(si, rbti2);
-    rbti2 = rbti2;
-    check_validity(si, rbti2);
-    RBTree<int> rbti3;
-    rbti3 = rbti2;
-    check_validity(si, rbti3);
-    RBTree<int> rbti4(std::move(rbti3));
-    check_validity(si, rbti4);
-    rbti2 = std::move(rbti4);
-    check_validity(si, rbti2);
+    if (i %200 == 0) {
+      RBTree<int> rbti2(rbti);
+      check_validity(si, rbti2);
+      rbti2 = rbti2;
+      check_validity(si, rbti2);
+      RBTree<int> rbti3;
+      rbti3 = rbti2;
+      check_validity(si, rbti3);
+      RBTree<int> rbti4(std::move(rbti3));
+      check_validity(si, rbti4);
+      rbti2 = std::move(rbti4);
+      check_validity(si, rbti2);
+    }
   }
 
   for (std::size_t i = 0; i != num; ++i) {
@@ -326,6 +338,49 @@ std::vector<typename T::iterator> build_iterator_vector(T& container)
   return rtn;
 }
 
+template <typename T, typename U>
+std::pair<std::vector<typename T::iterator>, 
+          std::vector<typename U::iterator>>
+  build_iterator_vector(T& c1, U& c2)
+{
+  using std::swap;
+
+  assert(c1.size() == c2.size());
+  if (c1.empty()) return {};
+
+  std::vector<typename T::iterator> rtn1(c1.size());
+  std::vector<typename U::iterator> rtn2(c1.size());
+
+  std::iota(rtn1.begin(), rtn1.end(), c1.begin());
+  std::iota(rtn2.begin(), rtn2.end(), c2.begin());
+
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_int_distribution<int> dist(0, c1.size()-1);
+
+  for (std::size_t k = 0; k != c1.size(); ++k) {
+    if (dist(mt) % 5 < 3) {
+      //60%
+      auto i = dist(mt), j = dist(mt);
+      swap(rtn1[i], rtn1[j]);
+      swap(rtn2[i], rtn2[j]);
+    } else {
+      auto i = dist(mt);
+      rtn1[i] = c1.end();
+      rtn2[i] = c2.end();
+    }
+  }
+
+  auto end1 = std::remove_if(rtn1.begin(), rtn1.end(),
+      [&c1](const auto &it){return it==c1.end();});
+  rtn1.erase(end1, rtn1.end());
+  auto end2 = std::remove_if(rtn2.begin(), rtn2.end(),
+      [&c2](const auto &it){return it==c2.end();});
+  rtn2.erase(end2, rtn2.end());
+
+  return {std::move(rtn1), std::move(rtn2)};
+}
+
 template <typename T>
 void remove_duplicate(T &c)
 {
@@ -336,8 +391,8 @@ void remove_duplicate(T &c)
 }
 
 void benchmark_removal() {
-  //for (std::size_t num = 1000; num < 50000; num *= 2) {
-  for (std::size_t num = 50; num < 5000000; num *= 2) {
+  for (std::size_t num = 1000; num < 50000; num *= 2) {
+  //for (std::size_t num = 50; num < 5000000; num *= 2) {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_int_distribution<int> dist(0, num);
@@ -351,6 +406,32 @@ void benchmark_removal() {
     }
 
     auto setsize = si.size();
+    auto itv = build_iterator_vector(rbti, si);
+    auto n = itv.first.size();
+    double nlogn = setsize * log2(setsize) - (setsize-n) * log2(setsize-n) -
+                   n * log2(std::exp(1));
+    cout << num << " " << setsize << " " << n << " " << std::endl;
+
+    double resultrbti = benchmark_removal(rbti, itv.first);
+    //cout << __LINE__ << std::endl;
+    cout << "\t";
+    cout << resultrbti << "us "
+         << resultrbti / static_cast<double>(n) << " "
+         << resultrbti / nlogn << " "
+         << resultrbti / static_cast<double>(n) / n << " ";
+    cout << std::endl;
+    double resultsi = benchmark_removal(si, itv.second);
+    //cout << __LINE__ << std::endl;
+    cout << "\t";
+    cout << resultsi << "us "
+         << resultsi / static_cast<double>(n) << " "
+         << resultsi / nlogn << " "
+         << resultsi / static_cast<double>(n) / n << " ";
+    cout << std::endl;
+    
+    cout << "\t\tmultiplier ";
+    cout << resultrbti/resultsi;
+    cout << endl;
 
     //std::vector<std::size_t> idx;
     //for (std::size_t i = 0; i != si.size(); ++i) {
@@ -364,24 +445,35 @@ void benchmark_removal() {
     //}
 
 
-    double result, resultrbt;
+    //double result, resultrbt;
 
-    {
-    //cout << __LINE__ << std::endl;
-    auto itv = build_iterator_vector(si);
-    auto n = itv.size();
-    cout << num << " " << setsize << " " << n << " ";
-    //cout << __LINE__ << std::endl;
-    result = benchmark_removal(si, itv);
-    //cout << __LINE__ << std::endl;
-    double nlogn = setsize * log2(setsize) - (setsize-n) * log2(setsize-n) -
-                   n * log2(std::exp(1));
-    cout << result << "us "
-         << result / static_cast<double>(n) << " "
-         << result / nlogn << " "
-         << result / static_cast<double>(n) / n << " ";
-    cout << std::endl;
-    }
+    //{
+    ////cout << __LINE__ << std::endl;
+    //auto itv = build_iterator_vector(si);
+    //auto n = itv.size();
+    //cout << num << " " << setsize << " " << n << " ";
+    ////cout << __LINE__ << std::endl;
+    //result = benchmark_removal(si, itv);
+    ////cout << __LINE__ << std::endl;
+    //double nlogn = setsize * log2(setsize) - (setsize-n) * log2(setsize-n) -
+    //               n * log2(std::exp(1));
+    //cout << result << "us "
+    //     << result / static_cast<double>(n) << " "
+    //     << result / nlogn << " "
+    //     << result / static_cast<double>(n) / n << " ";
+    //cout << std::endl;
+    //}
+    //{
+    ////cout << __LINE__ << std::endl;
+    ////cout << __LINE__ << std::endl;
+    //result = benchmark_removal(rbti, itv.first);
+    ////cout << __LINE__ << std::endl;
+    //cout << result << "us "
+    //     << result / static_cast<double>(n) << " "
+    //     << result / nlogn << " "
+    //     << result / static_cast<double>(n) / n << " ";
+    //cout << std::endl;
+    //}
 
     //cout << "RBTree ";
     //result = benchmark_removal(rbti, build_iterator_vector(rbti, idx));
@@ -475,6 +567,22 @@ void testRandomRemoval(std::size_t num) {
     check_validity(si, rbti);
     //cout << __LINE__ << endl;
   }
+
+  for (std::size_t i = 0; i != num; ++i) {
+    auto x = dist(mt);
+    rbti.insert(x);
+    si.insert(x);
+  }
+  auto itp = build_iterator_vector(rbti, si);
+  //decltype(rbti.begin()) itrbti;
+  //decltype(si.begin()) itsi;
+  for (std::size_t i = 0; i != itp.first.size(); ++i) {
+    rbti.erase(itp.first[i]);
+    si.erase(itp.second[i]);
+    assert(rbti.check_parent());
+    assert(rbti.is_valid_rb_tree());
+    check_validity(si, rbti);
+  }
 }
 
 
@@ -483,11 +591,11 @@ int main(int, char **)
 {
   testInitializer();
   testGet();
-  //testInsertion();
+  testInsertion();
   testIterator();
-  //testRandomInsertion(1000);
-  //testRandomRemoval(4000);
-  //benchmark();
+  testRandomInsertion(10000);
+  testRandomRemoval(10000);
+  benchmark();
   benchmark_removal();
   output();
   return 0;

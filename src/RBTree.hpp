@@ -58,6 +58,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // ctor
   RBTree() {}
+  //explicit RBTree(const Compare& comp = Compare()) : _comp(comp) {}
   RBTree(const RBTree &other) 
     : _root(copy_node(other._root)) {
     build_prev_next(_root);
@@ -317,6 +318,7 @@ private:
   wNode _begin; // maybe _rend should not be _end
   pNode _end;
   size_type _size = 0;
+  //Compare _comp;
 
 ///////////////////////////////////////////////////////////////////////////////
 // copy ctor
@@ -560,10 +562,12 @@ private:
   std::pair<pNode&, bool> find(pNode &curr, const_reference value, 
       pNode &parent) {
     if (!curr) return {curr, false};
+    //if (_comp(curr->value(), value)) {
     if (Compare()(curr->value(), value)) {
       parent = curr; 
       return find(curr->right(), value, parent);
     }
+    //if (_comp(value, curr->value())) {
     if (Compare()(value, curr->value())) {
       parent = curr;
       return find(curr->left(), value, parent);
