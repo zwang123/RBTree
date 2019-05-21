@@ -469,31 +469,76 @@ private:
   }
   // deletion
   void erase_repair_tree(pNode p) noexcept {
+    using std::swap;
     if (p->is_root()) return;
 
     // assert(p->parent() && p->is_black());
-    if (p->parent()->left() == p && is_red(p->parent()->right())) {
+    if (p->parent()->left() == p) {
+      pNode sib = p->parent()->right();
+      if(is_red(sib)) {
+        //assert(sib && p->parent()->is_black());
+        rotate_left(p->parent());
+        swap(p->parent()->color(), sib->color());
+      }
+      sib = p->parent()->right();
+      //assert(sib->is_black());
+      if (erase_repair_tree_34(p, sib)) return;
+      if (is_black(sib->right())) {
+        // assert(is_red(sib->left()));
+        rotate_right(p->parent()->right());
+        swap(sib->parent()->color(), sib->color());
+      }
+      sib = p->parent()->right();
+      // assert(is_red(sib->right()));
+      sib->right()->set_black();
+      swap(sib->parent()->color(), sib->color());
       rotate_left(p->parent());
-      p->parent()->set_red();
-      p->grandparent()->set_black();
-    } else if (p->parent()->right() == p && is_red(p->parent()->left())) {
-      rotate_right(p->parent());
-      p->parent()->set_red();
-      p->grandparent()->set_black();
-    } // p BLACK parent RED sibling BLACK
 
-    pNode sib = p->sibling();
-    // assert(is_black(sib));
+      
+      //{
+      //  pNode &ptr2sib = p->parent()->right();
+      //  //assert(sib->is_black());
+      //  if erase_repair_tree_34(p, sib) return;
+      //  if is_black(sib->right()) {
+      //    // assert(is_red(sib->left()));
+      //    rotate_right();
+      //  }
+      //}
+    } else {
+      pNode sib = p->parent()->left();
+      if(is_red(sib)) {
+        //assert(sib && p->parent()->is_black());
+        rotate_right(p->parent());
+        swap(p->parent()->color(), sib->color());
+      }
+      sib = p->parent()->left();
+      //assert(sib->is_black());
+      if (erase_repair_tree_34(p, sib)) return;
+      if (is_black(sib->left())) {
+        // assert(is_red(sib->right()));
+        rotate_left(p->parent()->left());
+        swap(sib->parent()->color(), sib->color());
+      }
+      sib = p->parent()->left();
+      // assert(is_red(sib->left()));
+      sib->left()->set_black();
+      swap(sib->parent()->color(), sib->color());
+      rotate_right(p->parent());
+    }
+  }
+  // CASE 3-4
+  bool erase_repair_tree_34(pNode p, pNode sib) noexcept {
+    // assert(p->parent() && p->is_black());
+    // assert(sib->is_black());
     if (sib && is_black(sib->left()) && is_black(sib->right())) {
       sib->set_red();
       if (p->parent()->is_black())
         erase_repair_tree(p->parent());
       else
         p->parent()->set_black();
-      return;
+      return true;
     }
-  // TODO
-  // CASE 5&&6
+    return false;
   }
 
 ///////////////////////////////////////////////////////////////////////////////
