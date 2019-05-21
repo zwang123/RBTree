@@ -173,6 +173,8 @@ void testInsertion()
 
 void check_validity(set<int> &si, RBTree<int> &rbti)
 {
+  assert(rbti.check_parent());
+  assert(rbti.is_valid_rb_tree());
   //cout << __LINE__ << endl;
   assert(std::equal(si.begin(), si.end(), rbti.begin()));
   //cout << __LINE__ << endl;
@@ -187,6 +189,7 @@ void check_validity(set<int> &si, RBTree<int> &rbti)
   //cout << __LINE__ << endl;
   assert(si.empty() == rbti.empty());
   //cout << __LINE__ << endl;
+  //
 }
 
 
@@ -217,8 +220,6 @@ void testRandomInsertion(std::size_t num)
 
     check_validity(si, rbti);
     //cout << rbti.serialize() << endl;
-    assert(rbti.check_parent());
-    assert(rbti.is_valid_rb_tree());
 
     if (i %200 == 0) {
       RBTree<int> rbti2(rbti);
@@ -256,6 +257,14 @@ void testRandomInsertion(std::size_t num)
   swap(si, si2);
   check_validity(si, rbti);
   check_validity(si2, rbti2);
+
+  RBTree<int> rbti3(rbti.cbegin(), rbti.cend());
+  check_validity(si, rbti3);
+  RBTree<int> rbti4(si.cbegin(), si.cend());
+  check_validity(si, rbti4);
+  RBTree<int> rbti5;
+  rbti5.insert(si.cbegin(), si.cend());
+  check_validity(si, rbti5);
 
 }
 
@@ -560,9 +569,9 @@ void testRandomRemoval(std::size_t num) {
     //cout << __LINE__ << endl;
     si.erase(x);
     //cout << __LINE__ << endl;
-    assert(rbti.check_parent());
+    //assert(rbti.check_parent());
     //cout << __LINE__ << endl;
-    assert(rbti.is_valid_rb_tree());
+    //assert(rbti.is_valid_rb_tree());
     //cout << __LINE__ << endl;
     check_validity(si, rbti);
     //cout << __LINE__ << endl;
@@ -583,6 +592,47 @@ void testRandomRemoval(std::size_t num) {
     assert(rbti.is_valid_rb_tree());
     check_validity(si, rbti);
   }
+
+  for (std::size_t i = 0; i != num; ++i) {
+    auto x = dist(mt);
+    rbti.insert(x);
+    si.insert(x);
+  }
+  rbti.erase(rbti.begin(), rbti.end());
+  si.erase(si.begin(), si.end());
+  check_validity(si, rbti);
+  rbti.erase(rbti.begin(), rbti.end());
+  si.erase(si.begin(), si.end());
+  check_validity(si, rbti);
+
+  for (std::size_t i = 0; i != num; ++i) {
+    auto x = dist(mt);
+    rbti.insert(x);
+    si.insert(x);
+  }
+
+  auto start = dist(mt) % (si.size()/2);
+  assert(start+1 <= si.size());
+  auto maxLen = (si.size() - start - 1);
+  auto len = dist(mt) % maxLen + 1;
+  auto itbeg = rbti.begin();
+  std::advance(itbeg, start);
+
+  rbti.erase(itbeg, itbeg);
+  check_validity(si, rbti);
+
+  auto itend = itbeg;
+  std::advance(itend, len);
+  rbti.erase(itbeg, itend);
+
+  {
+    auto itbeg = si.begin();
+    std::advance(itbeg, start);
+    auto itend = itbeg;
+    std::advance(itend, len);
+    si.erase(itbeg, itend);
+  }
+  check_validity(si, rbti);
 }
 
 
@@ -593,8 +643,8 @@ int main(int, char **)
   testGet();
   testInsertion();
   testIterator();
-  testRandomInsertion(10000);
-  testRandomRemoval(10000);
+  testRandomInsertion(1000);
+  testRandomRemoval(4000);
   benchmark();
   benchmark_removal();
   output();

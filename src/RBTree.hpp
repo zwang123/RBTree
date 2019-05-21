@@ -46,21 +46,26 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 // member types
   using value_type = T;
+  using value_compare = Compare;
   using reference = value_type&;
   using const_reference = const value_type&;
   using iterator = RBTreeIterator<const T>;
   using const_iterator = RBTreeIterator<const T>;
   using reverse_iterator = std::reverse_iterator<iterator>;
   using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-  using difference_type = typename iterator::difference_type;
   using size_type = std::size_t;
+  using difference_type = typename iterator::difference_type;
   
 ///////////////////////////////////////////////////////////////////////////////
 // ctor
-  RBTree() {}
-  //explicit RBTree(const Compare& comp = Compare()) : _comp(comp) {}
+  explicit RBTree(const Compare& comp = Compare()) : _comp(comp) {}
+  template <class InputIt>
+  RBTree( InputIt first, InputIt last, const Compare& comp = Compare())
+    : _comp(comp) {
+    insert(first, last);
+  }
   RBTree(const RBTree &other) 
-    : _root(copy_node(other._root)) {
+    : _root(copy_node(other._root)), _comp(other._comp) {
     build_prev_next(_root);
     build_begin(_root);
     build_end(_root);
@@ -140,6 +145,11 @@ public:
     return {inserted, true};
   }
 
+  template <class InputIt>
+  void insert( InputIt first, InputIt last ) {
+    while (first != last) insert(*first++);
+  }
+
   iterator erase(iterator pos) {
     pNode p = std::const_pointer_cast<Node>(pos.lock());
 
@@ -148,10 +158,6 @@ public:
     wNode next = p->next();
     next->prev() = p->prev();
     (p->prev()?p->prev()->next():_begin) = next;
-
-    //std::cout << (next).lock() << std::endl;
-    //std::cout << (p->prev()?p->prev()->next():_begin).lock() << std::endl;
-    //std::cout << (p->next()->prev()).lock() << std::endl;
 
     // empty()
     if (_begin == _end) {clear(); return end();}
@@ -176,16 +182,15 @@ public:
       } else erase_repair_tree(p);
       pointer_to_this(p) = child;
       // p is deleted!
-
-      //if (child) child->parent() = p->parent();
-      //pointer_to_this(p) = child;
-      //// p is deleted!
-      //if (is_red(child)) child->set_black();
-      //else erase_repair_tree(child);
     }
 
     --_size;
     return next;
+  }
+
+  iterator erase(const_iterator first, const_iterator last) {
+    while (first != last) erase(first++);
+    return last;
   }
 
   size_type erase(const_reference value) {
@@ -195,38 +200,13 @@ public:
     return 1;
   }
 
-  // swap everything except value and prev/next
-  void swap_but_value_prev_next(pNode lhs, pNode rhs) {
-    //if (lhs == rhs) return;
-
-    using std::swap;
-    
-    // swap color
-    swap(lhs->color(), rhs->color());
-
-    // swap child
-    wNode lparent = lhs, rparent = rhs;
-    swap(
-    lhs->left()?lhs->left()->parent():lparent,
-    rhs->left()?rhs->left()->parent():rparent);
-    lparent = lhs; rparent = rhs;
-    swap(
-    lhs->right()?lhs->right()->parent():lparent,
-    rhs->right()?rhs->right()->parent():rparent);
-    swap(lhs->left(), rhs->left());
-    swap(lhs->right(), rhs->right());
-
-    // swap parent
-    swap(pointer_to_this(lhs), pointer_to_this(rhs));
-    swap(lhs->parent(), rhs->parent());
-  }
-
   void swap(RBTree &other) noexcept {
     using std::swap;
     swap(_root, other._root);
     swap(_begin, other._begin);
     swap(_end, other._end);
     swap(_size, other._size);
+    swap(_comp, other._comp);
   }
   
 ///////////////////////////////////////////////////////////////////////////////
@@ -240,6 +220,10 @@ public:
   //  auto rtn = find(_root, value);
   //  return rtn.second ? rtn.first : cend();
   //}
+  
+///////////////////////////////////////////////////////////////////////////////
+// observers
+value_compare value_comp() const {return _comp;}
 
 #ifndef NDEBUG
 ///////////////////////////////////////////////////////////////////////////////
@@ -318,7 +302,7 @@ private:
   wNode _begin; // maybe _rend should not be _end
   pNode _end;
   size_type _size = 0;
-  //Compare _comp;
+  Compare _comp;
 
 ///////////////////////////////////////////////////////////////////////////////
 // copy ctor
@@ -547,6 +531,32 @@ private:
     return false;
   }
 
+  // swap everything except value and prev/next
+  void swap_but_value_prev_next(pNode lhs, pNode rhs) {
+    //if (lhs == rhs) return;
+
+    using std::swap;
+    
+    // swap color
+    swap(lhs->color(), rhs->color());
+
+    // swap child
+    wNode lparent = lhs, rparent = rhs;
+    swap(
+    lhs->left()?lhs->left()->parent():lparent,
+    rhs->left()?rhs->left()->parent():rparent);
+    lparent = lhs; rparent = rhs;
+    swap(
+    lhs->right()?lhs->right()->parent():lparent,
+    rhs->right()?rhs->right()->parent():rparent);
+    swap(lhs->left(), rhs->left());
+    swap(lhs->right(), rhs->right());
+
+    // swap parent
+    swap(pointer_to_this(lhs), pointer_to_this(rhs));
+    swap(lhs->parent(), rhs->parent());
+  }
+
 ///////////////////////////////////////////////////////////////////////////////
 // lookup
   std::pair<pNode&, bool> find(pNode &curr, const_reference value) {
@@ -562,13 +572,13 @@ private:
   std::pair<pNode&, bool> find(pNode &curr, const_reference value, 
       pNode &parent) {
     if (!curr) return {curr, false};
-    //if (_comp(curr->value(), value)) {
-    if (Compare()(curr->value(), value)) {
+    if (_comp(curr->value(), value)) {
+    //if (Compare()(curr->value(), value)) {
       parent = curr; 
       return find(curr->right(), value, parent);
     }
-    //if (_comp(value, curr->value())) {
-    if (Compare()(value, curr->value())) {
+    if (_comp(value, curr->value())) {
+    //if (Compare()(value, curr->value())) {
       parent = curr;
       return find(curr->left(), value, parent);
     }

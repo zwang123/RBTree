@@ -4,6 +4,5 @@ This is an experimental implementation of [red-black tree](https://en.wikipedia.
 
 ## TODO List
 
-* Compare()
-* Range insertion/deletion/ctor
+* erase the last elem will invalidate end() iter
 * ...
