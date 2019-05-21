@@ -142,32 +142,41 @@ public:
   iterator erase(iterator pos) {
     pNode p = std::const_pointer_cast<Node>(pos.lock());
 
+    //assert(p)
+    // prev/next
     wNode next = p->next();
     next->prev() = p->prev();
     p->prev()?p->prev()->next():_begin = p->next();
+
+    // empty()
     if (_begin == _end) {clear(); return end();}
 
     if (p->leaf_child_count() == 0) {
-      //pNode np = p->left();
-      //while (np->right()) np = np->right();
-      //p->swap_value(*np);
-      //swap(p, np);
       swap_but_value_prev_next(p, p->prev().lock());
     }
     //assert(check_parent());
+    //assert(p->leaf_child_count() >= 0);
     
-    // p has at most 1 leaf-child (null child)
-    if (p->is_root()) {
-      _root = p->left()?p->left():p->right();
-      // assert(_root);
-      _root->set_black();
-    } else if (p->is_red()) {
+
+    if (p->is_red()) {
       // assert(p->leaf_child_count() == 2);
+      // assert(!p->is_root());
       p->pointer_to_this() = nullptr;
     } else {
-      // p->parent() && p->is_black() && p->leaf_child_count <= 1
-    // TODO
-      ;
+      pNode child = p->left()?p->left():p->right();
+      if (child) {
+        //assert(child->is_red());
+        child->parent() = p->parent();
+        child->set_black();
+      } else erase_repair_tree(p);
+      pointer_to_this(p) = child;
+      // p is deleted!
+
+      //if (child) child->parent() = p->parent();
+      //pointer_to_this(p) = child;
+      //// p is deleted!
+      //if (is_red(child)) child->set_black();
+      //else erase_repair_tree(child);
     }
 
     --_size;
@@ -181,13 +190,6 @@ public:
     return 1;
   }
 
-  //// swap two Nodes
-  //void swap(pNode lhs, pNode rhs) {
-  //  lhs->swap_value(rhs);
-  //  swap_but_value_prev_next(lhs, rhs);
-  //  swap_prev_next(lhs, rhs);
-  //}
-  
   // swap everything except value and prev/next
   void swap_but_value_prev_next(pNode lhs, pNode rhs) {
     //if (lhs == rhs) return;
@@ -456,6 +458,42 @@ private:
         grandparent->set_red();
       }
     }
+  }
+  
+  // assert(p)
+  // assert(p->is_black())
+  // path starting from non-empty pointer p is missing one black node,
+  // fix it
+  void erase_repair_tree(wNode curr) noexcept {
+    erase_repair_tree(curr.lock());
+  }
+  // deletion
+  void erase_repair_tree(pNode p) noexcept {
+    if (p->is_root()) return;
+
+    // assert(p->parent() && p->is_black());
+    if (p->parent()->left() == p && is_red(p->parent()->right())) {
+      rotate_left(p->parent());
+      p->parent()->set_red();
+      p->grandparent()->set_black();
+    } else if (p->parent()->right() == p && is_red(p->parent()->left())) {
+      rotate_right(p->parent());
+      p->parent()->set_red();
+      p->grandparent()->set_black();
+    } // p BLACK parent RED sibling BLACK
+
+    pNode sib = p->sibling();
+    // assert(is_black(sib));
+    if (sib && is_black(sib->left()) && is_black(sib->right())) {
+      sib->set_red();
+      if (p->parent()->is_black())
+        erase_repair_tree(p->parent());
+      else
+        p->parent()->set_black();
+      return;
+    }
+  // TODO
+  // CASE 5&&6
   }
 
 ///////////////////////////////////////////////////////////////////////////////
