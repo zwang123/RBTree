@@ -25,7 +25,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 // ctor/dtor
-  RBTreeNode() {}
+  RBTreeNode() : _value() {}
   RBTreeNode(const value_type &value) : _value(value) {}
   template <typename std::enable_if<
     std::is_nothrow_move_constructible<value_type>::value>::type* = nullptr>
