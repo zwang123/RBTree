@@ -12,6 +12,8 @@
 #include <utility>
 #include <RBTree.hpp>
 
+static std::size_t multiplier = 1;
+
 struct Foo {};
 struct Base {};
 struct Derived : Base {};
@@ -221,7 +223,7 @@ void testRandomInsertion(std::size_t num)
     check_validity(si, rbti);
     //cout << rbti.serialize() << endl;
 
-    if (i %200 == 0) {
+    if (i %(50*multiplier) == 0) {
       RBTree<int> rbti2(rbti);
       check_validity(si, rbti2);
       rbti2 = rbti2;
@@ -307,7 +309,7 @@ std::size_t benchmark_removal(T &rbti,
 }
 
 void benchmark() {
-  for (std::size_t num = 1000; num < 50000; num *= 2) {
+  for (std::size_t num = 1000; num < 5000*multiplier; num *= 2) {
     double result = benchmark<RBTree<int>>(num);
     cout << num << " " 
          << result << "us "
@@ -319,7 +321,7 @@ void benchmark() {
 }
 
 void benchmark_insertion() {
-  for (std::size_t num = 1000; num < 50000; num *= 2) {
+  for (std::size_t num = 1000; num < 5000*multiplier; num *= 2) {
     auto seq = generate_random_vector<int>(num);
 
     auto beg = std::chrono::high_resolution_clock::now();
@@ -451,7 +453,7 @@ void remove_duplicate(T &c)
 }
 
 void benchmark_removal() {
-  for (std::size_t num = 1000; num < 50000; num *= 2) {
+  for (std::size_t num = 1000; num < 5000*multiplier; num *= 2) {
   //for (std::size_t num = 50; num < 5000000; num *= 2) {
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -628,14 +630,15 @@ void testRandomRemoval(std::size_t num) {
 
 
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
+  if (argc > 1) multiplier = strtoull(argv[1], nullptr, 0);
   testInitializer();
   testGet();
   testInsertion();
   testIterator();
-  testRandomInsertion(1000);
-  testRandomRemoval(4000);
+  testRandomInsertion(100*multiplier);
+  testRandomRemoval(400*multiplier);
   benchmark();
   benchmark_insertion();
   benchmark_removal();
